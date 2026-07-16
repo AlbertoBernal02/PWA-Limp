@@ -6,9 +6,18 @@
     <div class="py-8">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <div class="card p-6">
-                <form method="POST" action="{{ route('admin.operarios.update', $operario) }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.operarios.update', $operario) }}" class="space-y-4" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+
+                    <div>
+                        <x-input-label for="avatar" value="Foto de perfil" />
+                        <div class="flex items-center gap-4 mt-1">
+                            <x-avatar :src="$operario->avatarUrl()" :iniciales="$operario->iniciales()" class="w-14 h-14 text-lg" />
+                            <input id="avatar" name="avatar" type="file" accept="image/*" class="field-input" />
+                        </div>
+                        <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
+                    </div>
 
                     <div>
                         <x-input-label for="name" value="Nombre" />

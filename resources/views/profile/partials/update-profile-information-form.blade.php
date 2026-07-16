@@ -9,9 +9,18 @@
         </p>
     </header>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-4">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-4" enctype="multipart/form-data">
         @csrf
         @method('patch')
+
+        <div>
+            <x-input-label for="avatar" value="Foto de perfil" />
+            <div class="flex items-center gap-4 mt-1">
+                <x-avatar :src="$user->avatarUrl()" :iniciales="$user->iniciales()" class="w-14 h-14 text-lg" />
+                <input id="avatar" name="avatar" type="file" accept="image/*" class="field-input" />
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('avatar')" />
+        </div>
 
         <div>
             <x-input-label for="name" value="Nombre" />

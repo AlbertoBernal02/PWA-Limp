@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nombre', 'direccion', 'telefono', 'notas'])]
+#[Fillable(['nombre', 'direccion', 'telefono', 'notas', 'foto_path'])]
 class Cliente extends Model
 {
     use HasFactory;
@@ -15,5 +15,10 @@ class Cliente extends Model
     public function tareas(): HasMany
     {
         return $this->hasMany(Tarea::class);
+    }
+
+    public function fotoUrl(): ?string
+    {
+        return $this->foto_path ? asset('storage/'.$this->foto_path) : null;
     }
 }

@@ -26,6 +26,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th></th>
                                 <th>Nombre</th>
                                 <th>Dirección</th>
                                 <th>Teléfono</th>
@@ -35,6 +36,17 @@
                         <tbody>
                             @foreach ($clientes as $cliente)
                                 <tr>
+                                    <td>
+                                        @if ($cliente->fotoUrl())
+                                            <img src="{{ $cliente->fotoUrl() }}" alt="{{ $cliente->nombre }}" class="w-9 h-9 rounded-lg object-cover bg-slate-100">
+                                        @else
+                                            <span class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 16.5V4.5A1.5 1.5 0 014.5 3h15A1.5 1.5 0 0121 4.5v15A1.5 1.5 0 0119.5 21h-15A1.5 1.5 0 013 19.5v-3zM9 8.25a1.125 1.125 0 11-2.25 0 1.125 1.125 0 012.25 0z" />
+                                                </svg>
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="font-medium text-slate-800">{{ $cliente->nombre }}</td>
                                     <td>{{ $cliente->direccion }}</td>
                                     <td>{{ $cliente->telefono ?: '—' }}</td>

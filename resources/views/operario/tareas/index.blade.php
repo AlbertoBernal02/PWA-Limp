@@ -51,7 +51,7 @@
                             </div>
                         </div>
 
-                        <div class="shrink-0">
+                        <div class="shrink-0 flex flex-col items-end gap-2">
                             @if ($tarea->estado === 'hecha')
                                 <span class="badge-done">
                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -59,10 +59,30 @@
                                     </svg>
                                     Hecha
                                 </span>
+                                @if ($tarea->fotoEvidenciaUrl())
+                                    <a href="{{ $tarea->fotoEvidenciaUrl() }}" target="_blank">
+                                        <img src="{{ $tarea->fotoEvidenciaUrl() }}" alt="Evidencia de la tarea" class="w-12 h-12 rounded-lg object-cover ring-1 ring-slate-200">
+                                    </a>
+                                @endif
                             @else
-                                <form method="POST" action="{{ route('operario.tareas.marcar-hecha', $tarea) }}">
+                                <form method="POST" action="{{ route('operario.tareas.marcar-hecha', $tarea) }}" enctype="multipart/form-data" class="flex flex-col items-end gap-2">
                                     @csrf
                                     @method('PATCH')
+                                    <label class="text-xs text-slate-500 flex items-center gap-1 cursor-pointer hover:text-brand-700">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.344 3.071a49.52 49.52 0 015.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.24.383.645.643 1.11.71.386.054.77.113 1.152.177 1.432.239 2.429 1.493 2.429 2.909V18a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 18V9.574c0-1.416.997-2.67 2.429-2.909.382-.064.766-.123 1.151-.178a1.56 1.56 0 001.11-.71l.822-1.316a2.942 2.942 0 012.332-1.39z" />
+                                        </svg>
+                                        <span class="foto-nombre">Añadir foto (opcional)</span>
+                                        <input
+                                            type="file"
+                                            name="foto_evidencia"
+                                            accept="image/*"
+                                            capture="environment"
+                                            class="hidden"
+                                            onchange="this.closest('form').querySelector('.foto-nombre').textContent = this.files[0]?.name ?? 'Añadir foto (opcional)'"
+                                        >
+                                    </label>
                                     <button type="submit" class="btn-primary">
                                         Marcar hecha
                                     </button>

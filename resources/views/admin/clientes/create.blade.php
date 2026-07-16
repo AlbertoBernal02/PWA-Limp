@@ -6,8 +6,14 @@
     <div class="py-8">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <div class="card p-6">
-                <form method="POST" action="{{ route('admin.clientes.store') }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.clientes.store') }}" class="space-y-4" enctype="multipart/form-data">
                     @csrf
+
+                    <div>
+                        <x-input-label for="foto" value="Foto del local/inmueble" />
+                        <input id="foto" name="foto" type="file" accept="image/*" class="field-input" />
+                        <x-input-error :messages="$errors->get('foto')" class="mt-2" />
+                    </div>
 
                     <div>
                         <x-input-label for="nombre" value="Nombre" />

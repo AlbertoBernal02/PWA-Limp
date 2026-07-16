@@ -6,9 +6,26 @@
     <div class="py-8">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <div class="card p-6">
-                <form method="POST" action="{{ route('admin.clientes.update', $cliente) }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.clientes.update', $cliente) }}" class="space-y-4" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+
+                    <div>
+                        <x-input-label for="foto" value="Foto del local/inmueble" />
+                        <div class="flex items-center gap-4 mt-1">
+                            @if ($cliente->fotoUrl())
+                                <img src="{{ $cliente->fotoUrl() }}" alt="{{ $cliente->nombre }}" class="w-14 h-14 rounded-lg object-cover bg-slate-100 shrink-0">
+                            @else
+                                <span class="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 16.5V4.5A1.5 1.5 0 014.5 3h15A1.5 1.5 0 0121 4.5v15A1.5 1.5 0 0119.5 21h-15A1.5 1.5 0 013 19.5v-3zM9 8.25a1.125 1.125 0 11-2.25 0 1.125 1.125 0 012.25 0z" />
+                                    </svg>
+                                </span>
+                            @endif
+                            <input id="foto" name="foto" type="file" accept="image/*" class="field-input" />
+                        </div>
+                        <x-input-error :messages="$errors->get('foto')" class="mt-2" />
+                    </div>
 
                     <div>
                         <x-input-label for="nombre" value="Nombre" />

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class OperarioController extends Controller
@@ -37,6 +38,7 @@ class OperarioController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
 
         User::create([
@@ -44,6 +46,7 @@ class OperarioController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role' => 'operario',
+            'avatar_path' => $request->hasFile('avatar') ? $request->file('avatar')->store('avatars', 'public') : null,
         ]);
 
         return redirect()->route('admin.operarios.index')->with('status', 'Operario creado correctamente.');
@@ -66,6 +69,7 @@ class OperarioController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($operario->id)],
             'password' => ['nullable', 'string', 'min:8'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $operario->name = $data['name'];
@@ -73,6 +77,14 @@ class OperarioController extends Controller
 
         if (! empty($data['password'])) {
             $operario->password = Hash::make($data['password']);
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($operario->avatar_path) {
+                Storage::disk('public')->delete($operario->avatar_path);
+            }
+
+            $operario->avatar_path = $request->file('avatar')->store('avatars', 'public');
         }
 
         $operario->save();
@@ -85,6 +97,10 @@ class OperarioController extends Controller
      */
     public function destroy(User $operario)
     {
+        if ($operario->avatar_path) {
+            Storage::disk('public')->delete($operario->avatar_path);
+        }
+
         $operario->delete();
 
         return redirect()->route('admin.operarios.index')->with('status', 'Operario eliminado.');

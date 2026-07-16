@@ -6,8 +6,14 @@
     <div class="py-8">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <div class="card p-6">
-                <form method="POST" action="{{ route('admin.operarios.store') }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.operarios.store') }}" class="space-y-4" enctype="multipart/form-data">
                     @csrf
+
+                    <div>
+                        <x-input-label for="avatar" value="Foto de perfil" />
+                        <input id="avatar" name="avatar" type="file" accept="image/*" class="field-input" />
+                        <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
+                    </div>
 
                     <div>
                         <x-input-label for="name" value="Nombre" />

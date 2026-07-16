@@ -66,6 +66,7 @@
                                 <th>Cliente</th>
                                 <th>Operario</th>
                                 <th>Estado</th>
+                                <th>Evidencia</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -81,6 +82,15 @@
                                             <span class="badge-done">Hecha</span>
                                         @else
                                             <span class="badge-pending">Pendiente</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($tarea->fotoEvidenciaUrl())
+                                            <a href="{{ $tarea->fotoEvidenciaUrl() }}" target="_blank">
+                                                <img src="{{ $tarea->fotoEvidenciaUrl() }}" alt="Evidencia" class="w-9 h-9 rounded-lg object-cover ring-1 ring-slate-200">
+                                            </a>
+                                        @else
+                                            <span class="text-slate-300">—</span>
                                         @endif
                                     </td>
                                     <td class="text-right space-x-3">

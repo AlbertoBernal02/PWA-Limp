@@ -26,6 +26,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th></th>
                                 <th>Nombre</th>
                                 <th>Correo electrónico</th>
                                 <th></th>
@@ -34,6 +35,9 @@
                         <tbody>
                             @foreach ($operarios as $operario)
                                 <tr>
+                                    <td>
+                                        <x-avatar :src="$operario->avatarUrl()" :iniciales="$operario->iniciales()" class="w-9 h-9 text-xs" />
+                                    </td>
                                     <td class="font-medium text-slate-800">{{ $operario->name }}</td>
                                     <td>{{ $operario->email }}</td>
                                     <td class="text-right space-x-3">

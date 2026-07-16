@@ -30,7 +30,15 @@ class TareaController extends Controller
     {
         abort_unless($tarea->operario_id === $request->user()->id, 403);
 
-        $tarea->marcarHecha();
+        $request->validate([
+            'foto_evidencia' => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $fotoPath = $request->hasFile('foto_evidencia')
+            ? $request->file('foto_evidencia')->store('evidencias', 'public')
+            : null;
+
+        $tarea->marcarHecha($fotoPath);
 
         return redirect()->route('operario.tareas.index')->with('status', 'Tarea marcada como hecha.');
     }

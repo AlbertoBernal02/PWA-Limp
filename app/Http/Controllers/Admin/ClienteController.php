@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClienteController extends Controller
 {
@@ -36,7 +37,14 @@ class ClienteController extends Controller
             'direccion' => ['required', 'string', 'max:255'],
             'telefono' => ['nullable', 'string', 'max:50'],
             'notas' => ['nullable', 'string'],
+            'foto' => ['nullable', 'image', 'max:4096'],
         ]);
+
+        unset($data['foto']);
+
+        if ($request->hasFile('foto')) {
+            $data['foto_path'] = $request->file('foto')->store('clientes', 'public');
+        }
 
         Cliente::create($data);
 
@@ -61,7 +69,18 @@ class ClienteController extends Controller
             'direccion' => ['required', 'string', 'max:255'],
             'telefono' => ['nullable', 'string', 'max:50'],
             'notas' => ['nullable', 'string'],
+            'foto' => ['nullable', 'image', 'max:4096'],
         ]);
+
+        unset($data['foto']);
+
+        if ($request->hasFile('foto')) {
+            if ($cliente->foto_path) {
+                Storage::disk('public')->delete($cliente->foto_path);
+            }
+
+            $data['foto_path'] = $request->file('foto')->store('clientes', 'public');
+        }
 
         $cliente->update($data);
 
@@ -73,6 +92,10 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
+        if ($cliente->foto_path) {
+            Storage::disk('public')->delete($cliente->foto_path);
+        }
+
         $cliente->delete();
 
         return redirect()->route('admin.clientes.index')->with('status', 'Cliente eliminado.');
