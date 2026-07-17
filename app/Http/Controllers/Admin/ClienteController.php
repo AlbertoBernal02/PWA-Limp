@@ -12,11 +12,38 @@ class ClienteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $clientes = Cliente::orderBy('nombre')->paginate(15);
+        $busqueda = $request->query('q');
 
-        return view('admin.clientes.index', compact('clientes'));
+        $clientes = Cliente::when($busqueda, fn ($query, $q) => $query->where(function ($query) use ($q) {
+                $query->where('nombre', 'like', "%{$q}%")
+                    ->orWhere('direccion', 'like', "%{$q}%")
+                    ->orWhere('telefono', 'like', "%{$q}%");
+            }))
+            ->orderBy('nombre')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.clientes.index', compact('clientes', 'busqueda'));
+    }
+
+    /**
+     * Ficha de cliente: datos e historial de tareas.
+     */
+    public function show(Cliente $cliente)
+    {
+        $tareas = $cliente->tareas()
+            ->with('operario')
+            ->orderByDesc('fecha')
+            ->orderByDesc('hora_estimada')
+            ->paginate(10);
+
+        $total = $cliente->tareas()->count();
+        $hechas = $cliente->tareas()->where('estado', 'hecha')->count();
+        $cumplimiento = $total > 0 ? round(($hechas / $total) * 100) : 0;
+
+        return view('admin.clientes.show', compact('cliente', 'tareas', 'total', 'hechas', 'cumplimiento'));
     }
 
     /**

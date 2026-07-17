@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-slate-200">
+<nav x-data="{ open: false }" class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -9,7 +9,7 @@
                         <span class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
                             <x-application-logo class="w-5 h-5 fill-current text-white" />
                         </span>
-                        <span class="hidden sm:block font-semibold text-slate-800">{{ config('app.name') }}</span>
+                        <span class="hidden sm:block font-semibold text-slate-800 dark:text-slate-100">{{ config('app.name') }}</span>
                     </a>
                 </div>
 
@@ -29,18 +29,23 @@
                             Operarios
                         </x-nav-link>
                     @else
-                        <x-nav-link :href="route('operario.tareas.index')" :active="request()->routeIs('operario.tareas.*')">
+                        <x-nav-link :href="route('operario.tareas.index')" :active="request()->routeIs('operario.tareas.index')">
                             Mis tareas de hoy
+                        </x-nav-link>
+                        <x-nav-link :href="route('operario.tareas.historial')" :active="request()->routeIs('operario.tareas.historial')">
+                            Historial
                         </x-nav-link>
                     @endif
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden sm:flex sm:items-center sm:ms-6 sm:gap-4">
+                <x-theme-toggle />
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-800 hover:text-gray-700 dark:hover:text-slate-200 focus:outline-none transition ease-in-out duration-150">
                             <x-avatar :src="Auth::user()->avatarUrl()" :iniciales="Auth::user()->iniciales()" class="w-7 h-7 text-xs mr-2" />
                             <div>{{ Auth::user()->name }}</div>
 
@@ -72,8 +77,9 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+            <div class="-me-2 flex items-center gap-3 sm:hidden">
+                <x-theme-toggle />
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-slate-500 hover:text-gray-500 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-700 focus:text-gray-500 dark:focus:text-slate-300 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -100,17 +106,20 @@
                     Operarios
                 </x-responsive-nav-link>
             @else
-                <x-responsive-nav-link :href="route('operario.tareas.index')" :active="request()->routeIs('operario.tareas.*')">
+                <x-responsive-nav-link :href="route('operario.tareas.index')" :active="request()->routeIs('operario.tareas.index')">
                     Mis tareas de hoy
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('operario.tareas.historial')" :active="request()->routeIs('operario.tareas.historial')">
+                    Historial
                 </x-responsive-nav-link>
             @endif
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-slate-700">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-base text-gray-800 dark:text-slate-100">{{ Auth::user()->name }}</div>
+                <div class="font-medium text-sm text-gray-500 dark:text-slate-400">{{ Auth::user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">

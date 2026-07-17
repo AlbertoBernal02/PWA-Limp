@@ -26,12 +26,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('operarios', OperarioController::class)->except('show');
-    Route::resource('clientes', ClienteController::class)->except('show');
+    Route::patch('operarios/{operario}/toggle-activo', [OperarioController::class, 'toggleActivo'])->name('operarios.toggle-activo');
+    Route::resource('clientes', ClienteController::class);
     Route::resource('tareas', AdminTareaController::class)->except('show');
 });
 
 Route::middleware(['auth', 'role:operario'])->prefix('operario')->name('operario.')->group(function () {
     Route::get('tareas', [OperarioTareaController::class, 'index'])->name('tareas.index');
+    Route::get('tareas/historial', [OperarioTareaController::class, 'historial'])->name('tareas.historial');
     Route::patch('tareas/{tarea}/marcar-hecha', [OperarioTareaController::class, 'marcarHecha'])->name('tareas.marcar-hecha');
 });
 

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 leading-tight">Editar tarea</h2>
+        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Editar tarea</h2>
     </x-slot>
 
     <div class="py-8">
@@ -58,7 +58,7 @@
                         @endif
 
                         <div class="flex items-center gap-4">
-                            <a href="{{ route('admin.tareas.index') }}" class="text-sm text-slate-600 hover:underline">Cancelar</a>
+                            <a href="{{ route('admin.tareas.index') }}" class="text-sm text-slate-600 dark:text-slate-400 hover:underline">Cancelar</a>
                             <x-primary-button>Guardar cambios</x-primary-button>
                         </div>
                     </div>

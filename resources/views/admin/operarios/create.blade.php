@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 leading-tight">Nuevo operario</h2>
+        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Nuevo operario</h2>
     </x-slot>
 
     <div class="py-8">
@@ -28,13 +28,19 @@
                     </div>
 
                     <div>
+                        <x-input-label for="telefono" value="Teléfono" />
+                        <x-text-input id="telefono" name="telefono" type="tel" class="w-full" :value="old('telefono')" placeholder="Ej. 600123456" />
+                        <x-input-error :messages="$errors->get('telefono')" class="mt-2" />
+                    </div>
+
+                    <div>
                         <x-input-label for="password" value="Contraseña" />
                         <x-text-input id="password" name="password" type="password" class="w-full" required />
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
 
                     <div class="flex items-center justify-end pt-2 gap-4">
-                        <a href="{{ route('admin.operarios.index') }}" class="text-sm text-slate-600 hover:underline">Cancelar</a>
+                        <a href="{{ route('admin.operarios.index') }}" class="text-sm text-slate-600 dark:text-slate-400 hover:underline">Cancelar</a>
                         <x-primary-button>Crear operario</x-primary-button>
                     </div>
                 </form>

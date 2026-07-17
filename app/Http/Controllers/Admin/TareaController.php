@@ -15,9 +15,14 @@ class TareaController extends Controller
      */
     public function index(Request $request)
     {
-        $filtros = $request->only(['fecha', 'operario_id', 'estado']);
+        $filtros = $request->only(['q', 'fecha', 'operario_id', 'estado']);
 
         $tareas = Tarea::with(['cliente', 'operario'])
+            ->when($filtros['q'] ?? null, fn ($query, $q) => $query->where(function ($query) use ($q) {
+                $query->whereHas('cliente', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
+                    ->orWhereHas('operario', fn ($query) => $query->where('name', 'like', "%{$q}%"))
+                    ->orWhere('descripcion', 'like', "%{$q}%");
+            }))
             ->when($filtros['fecha'] ?? null, fn ($query, $fecha) => $query->whereDate('fecha', $fecha))
             ->when($filtros['operario_id'] ?? null, fn ($query, $id) => $query->where('operario_id', $id))
             ->when($filtros['estado'] ?? null, fn ($query, $estado) => $query->where('estado', $estado))
@@ -42,15 +47,52 @@ class TareaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created resource in storage. Soporta crear varias tareas
+     * a la vez: para varios operarios y/o repitiendo semanalmente hasta una fecha.
      */
     public function store(Request $request)
     {
-        $data = $this->validarDatos($request);
+        $data = $request->validate([
+            'cliente_id' => ['required', 'exists:clientes,id'],
+            'operario_ids' => ['required', 'array', 'min:1'],
+            'operario_ids.*' => ['exists:users,id'],
+            'fecha' => ['required', 'date'],
+            'repetir_hasta' => ['nullable', 'date', 'after_or_equal:fecha'],
+            'hora_estimada' => ['nullable', 'date_format:H:i'],
+            'descripcion' => ['nullable', 'string'],
+        ]);
 
-        Tarea::create($data);
+        $fechas = [$data['fecha']];
 
-        return redirect()->route('admin.tareas.index')->with('status', 'Tarea creada correctamente.');
+        if (! empty($data['repetir_hasta'])) {
+            $cursor = \Illuminate\Support\Carbon::parse($data['fecha'])->addWeek();
+            $fin = \Illuminate\Support\Carbon::parse($data['repetir_hasta']);
+
+            // Tope de seguridad: máximo 2 años de repetición semanal.
+            for ($i = 0; $i < 104 && $cursor->lte($fin); $i++) {
+                $fechas[] = $cursor->toDateString();
+                $cursor->addWeek();
+            }
+        }
+
+        $creadas = 0;
+
+        foreach ($data['operario_ids'] as $operarioId) {
+            foreach ($fechas as $fecha) {
+                Tarea::create([
+                    'cliente_id' => $data['cliente_id'],
+                    'operario_id' => $operarioId,
+                    'fecha' => $fecha,
+                    'hora_estimada' => $data['hora_estimada'] ?? null,
+                    'descripcion' => $data['descripcion'] ?? null,
+                ]);
+                $creadas++;
+            }
+        }
+
+        $mensaje = $creadas === 1 ? 'Tarea creada correctamente.' : "{$creadas} tareas creadas correctamente.";
+
+        return redirect()->route('admin.tareas.index')->with('status', $mensaje);
     }
 
     /**

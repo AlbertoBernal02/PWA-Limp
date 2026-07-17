@@ -24,21 +24,42 @@ class TareaController extends Controller
     }
 
     /**
+     * Historial de tareas del operario autenticado: días anteriores completos
+     * más las tareas ya hechas de hoy.
+     */
+    public function historial(Request $request)
+    {
+        $tareas = $request->user()
+            ->tareas()
+            ->with('cliente')
+            ->where(function ($query) {
+                $query->whereDate('fecha', '<', now()->toDateString())
+                    ->orWhere('estado', 'hecha');
+            })
+            ->orderByDesc('fecha')
+            ->orderByDesc('hora_estimada')
+            ->paginate(10);
+
+        return view('operario.tareas.historial', compact('tareas'));
+    }
+
+    /**
      * Marca una tarea del operario autenticado como hecha.
      */
     public function marcarHecha(Request $request, Tarea $tarea)
     {
         abort_unless($tarea->operario_id === $request->user()->id, 403);
 
-        $request->validate([
+        $data = $request->validate([
             'foto_evidencia' => ['nullable', 'image', 'max:4096'],
+            'nota' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $fotoPath = $request->hasFile('foto_evidencia')
             ? $request->file('foto_evidencia')->store('evidencias', 'public')
             : null;
 
-        $tarea->marcarHecha($fotoPath);
+        $tarea->marcarHecha($fotoPath, $data['nota'] ?? null);
 
         return redirect()->route('operario.tareas.index')->with('status', 'Tarea marcada como hecha.');
     }

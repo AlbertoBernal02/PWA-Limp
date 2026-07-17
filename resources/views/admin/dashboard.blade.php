@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 leading-tight">Panel</h2>
+        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Panel</h2>
     </x-slot>
 
     <div class="py-8">
@@ -15,8 +15,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $pendientesHoy }}</p>
-                        <p class="text-sm text-slate-500">Pendientes hoy</p>
+                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $pendientesHoy }}</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Pendientes hoy</p>
                     </div>
                 </div>
 
@@ -27,8 +27,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $hechasHoy }}</p>
-                        <p class="text-sm text-slate-500">Hechas hoy</p>
+                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $hechasHoy }}</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Hechas hoy</p>
                     </div>
                 </div>
 
@@ -39,8 +39,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $totalOperarios }}</p>
-                        <p class="text-sm text-slate-500">Operarios</p>
+                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $totalOperarios }}</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Operarios</p>
                     </div>
                 </div>
 
@@ -51,8 +51,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $totalClientes }}</p>
-                        <p class="text-sm text-slate-500">Clientes</p>
+                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $totalClientes }}</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Clientes</p>
                     </div>
                 </div>
             </div>
@@ -60,15 +60,15 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Carga de la semana -->
                 <div class="card p-6 lg:col-span-2">
-                    <h3 class="font-semibold text-slate-800 mb-4">Tareas de los próximos 7 días</h3>
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-4">Tareas de los próximos 7 días</h3>
                     <div class="flex items-end gap-3 h-40">
                         @foreach ($semana as $dia)
                             <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <span class="text-xs font-medium text-slate-500">{{ $dia['total'] }}</span>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ $dia['total'] }}</span>
                                 <div class="w-full bg-brand-100 rounded-t-md" style="height: {{ $dia['total'] > 0 ? max(6, ($dia['total'] / $maxSemana) * 100) : 4 }}%">
                                     <div class="w-full h-full rounded-t-md bg-brand-500"></div>
                                 </div>
-                                <span class="text-xs text-slate-500 capitalize">{{ $dia['fecha']->translatedFormat('D') }}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 capitalize">{{ $dia['fecha']->translatedFormat('D') }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -76,20 +76,20 @@
 
                 <!-- Resumen por operario -->
                 <div class="card p-6">
-                    <h3 class="font-semibold text-slate-800 mb-4">Hoy por operario</h3>
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-4">Hoy por operario</h3>
                     <ul class="space-y-4">
                         @forelse ($porOperarioHoy as $fila)
                             <li>
                                 <div class="flex justify-between text-sm mb-1">
-                                    <span class="font-medium text-slate-700">{{ $fila['operario']->name }}</span>
-                                    <span class="text-slate-500">{{ $fila['hechas'] }}/{{ $fila['total'] }}</span>
+                                    <span class="font-medium text-slate-700 dark:text-slate-300">{{ $fila['operario']->name }}</span>
+                                    <span class="text-slate-500 dark:text-slate-400">{{ $fila['hechas'] }}/{{ $fila['total'] }}</span>
                                 </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2">
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
                                     <div class="bg-brand-500 h-2 rounded-full" style="width: {{ $fila['total'] > 0 ? ($fila['hechas'] / $fila['total']) * 100 : 0 }}%"></div>
                                 </div>
                             </li>
                         @empty
-                            <li class="text-sm text-slate-500">Nadie tiene tareas asignadas hoy.</li>
+                            <li class="text-sm text-slate-500 dark:text-slate-400">Nadie tiene tareas asignadas hoy.</li>
                         @endforelse
                     </ul>
                 </div>
@@ -98,13 +98,13 @@
             <!-- Tareas de hoy -->
             <div>
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-semibold text-slate-800">Tareas de hoy</h3>
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-100">Tareas de hoy</h3>
                     <a href="{{ route('admin.tareas.index') }}" class="text-sm text-brand-700 hover:underline">Ver todas →</a>
                 </div>
 
                 @if ($tareasHoy->isEmpty())
                     <div class="empty-state">
-                        <p class="text-slate-500">No hay tareas programadas para hoy.</p>
+                        <p class="text-slate-500 dark:text-slate-400">No hay tareas programadas para hoy.</p>
                         <a href="{{ route('admin.tareas.create') }}" class="btn-primary">Crear tarea</a>
                     </div>
                 @else

@@ -1,10 +1,10 @@
 <section>
     <header>
-        <h2 class="text-lg font-medium text-slate-800">
+        <h2 class="text-lg font-medium text-slate-800 dark:text-slate-100">
             Contraseña
         </h2>
 
-        <p class="mt-1 text-sm text-slate-500">
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Usa una contraseña larga y aleatoria para mayor seguridad.
         </p>
     </header>
@@ -40,7 +40,7 @@
                     x-show="show"
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-slate-500"
+                    class="text-sm text-slate-500 dark:text-slate-400"
                 >Guardado.</p>
             @endif
         </div>

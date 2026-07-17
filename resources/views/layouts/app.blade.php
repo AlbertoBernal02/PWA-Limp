@@ -7,6 +7,13 @@
 
         <title>{{ config('app.name') }}</title>
 
+        <script>
+            // Aplicado antes de pintar para evitar parpadeo del tema incorrecto.
+            if (localStorage.getItem('tema') === 'oscuro') {
+                document.documentElement.classList.add('dark');
+            }
+        </script>
+
         <!-- PWA -->
         <link rel="manifest" href="{{ asset('manifest.json') }}">
         <meta name="theme-color" content="#158c78">
@@ -25,12 +32,12 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-slate-50">
+        <div class="min-h-screen bg-slate-50 dark:bg-slate-900">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white border-b border-slate-200">
+                <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

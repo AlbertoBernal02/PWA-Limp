@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 leading-tight">Nuevo cliente</h2>
+        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Nuevo cliente</h2>
     </x-slot>
 
     <div class="py-8">
@@ -23,7 +23,10 @@
 
                     <div>
                         <x-input-label for="direccion" value="Dirección" />
-                        <x-text-input id="direccion" name="direccion" type="text" class="w-full" :value="old('direccion')" required />
+                        <div class="relative">
+                            <x-text-input id="direccion" name="direccion" type="text" class="w-full" :value="old('direccion')" autocomplete="off" data-address-autocomplete required />
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Escribe y selecciona una sugerencia; puedes completar piso/puerta después.</p>
                         <x-input-error :messages="$errors->get('direccion')" class="mt-2" />
                     </div>
 
@@ -40,7 +43,7 @@
                     </div>
 
                     <div class="flex items-center justify-end pt-2 gap-4">
-                        <a href="{{ route('admin.clientes.index') }}" class="text-sm text-slate-600 hover:underline">Cancelar</a>
+                        <a href="{{ route('admin.clientes.index') }}" class="text-sm text-slate-600 dark:text-slate-400 hover:underline">Cancelar</a>
                         <x-primary-button>Crear cliente</x-primary-button>
                     </div>
                 </form>

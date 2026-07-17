@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 leading-tight">
+        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">
             Perfil
         </h2>
     </x-slot>

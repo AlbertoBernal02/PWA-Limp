@@ -14,11 +14,21 @@ class OperarioController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $operarios = User::where('role', 'operario')->orderBy('name')->paginate(15);
+        $busqueda = $request->query('q');
 
-        return view('admin.operarios.index', compact('operarios'));
+        $operarios = User::where('role', 'operario')
+            ->when($busqueda, fn ($query, $q) => $query->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('telefono', 'like', "%{$q}%");
+            }))
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.operarios.index', compact('operarios', 'busqueda'));
     }
 
     /**
@@ -37,6 +47,7 @@ class OperarioController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'telefono' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8'],
             'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
@@ -44,6 +55,7 @@ class OperarioController extends Controller
         User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'telefono' => $data['telefono'] ?? null,
             'password' => Hash::make($data['password']),
             'role' => 'operario',
             'avatar_path' => $request->hasFile('avatar') ? $request->file('avatar')->store('avatars', 'public') : null,
@@ -68,12 +80,14 @@ class OperarioController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($operario->id)],
+            'telefono' => ['nullable', 'string', 'max:20'],
             'password' => ['nullable', 'string', 'min:8'],
             'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $operario->name = $data['name'];
         $operario->email = $data['email'];
+        $operario->telefono = $data['telefono'] ?? null;
 
         if (! empty($data['password'])) {
             $operario->password = Hash::make($data['password']);
@@ -90,6 +104,18 @@ class OperarioController extends Controller
         $operario->save();
 
         return redirect()->route('admin.operarios.index')->with('status', 'Operario actualizado correctamente.');
+    }
+
+    /**
+     * Activa o desactiva al operario, sin borrar su historial de tareas.
+     */
+    public function toggleActivo(User $operario)
+    {
+        $operario->update(['activo' => ! $operario->activo]);
+
+        $mensaje = $operario->activo ? 'Operario activado.' : 'Operario desactivado.';
+
+        return redirect()->route('admin.operarios.index')->with('status', $mensaje);
     }
 
     /**

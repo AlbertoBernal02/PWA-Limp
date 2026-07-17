@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['cliente_id', 'operario_id', 'fecha', 'hora_estimada', 'descripcion', 'estado', 'completada_at', 'foto_evidencia_path'])]
+#[Fillable(['cliente_id', 'operario_id', 'fecha', 'hora_estimada', 'descripcion', 'estado', 'completada_at', 'foto_evidencia_path', 'nota'])]
 class Tarea extends Model
 {
     use HasFactory;
@@ -30,7 +30,7 @@ class Tarea extends Model
         return $this->belongsTo(User::class, 'operario_id');
     }
 
-    public function marcarHecha(?string $fotoEvidenciaPath = null): void
+    public function marcarHecha(?string $fotoEvidenciaPath = null, ?string $nota = null): void
     {
         $data = [
             'estado' => 'hecha',
@@ -39,6 +39,10 @@ class Tarea extends Model
 
         if ($fotoEvidenciaPath) {
             $data['foto_evidencia_path'] = $fotoEvidenciaPath;
+        }
+
+        if ($nota) {
+            $data['nota'] = $nota;
         }
 
         $this->update($data);
