@@ -51,6 +51,12 @@
                         <a href="{{ route('admin.tareas.index') }}" class="btn-secondary">Limpiar</a>
                     @endif
                 </div>
+
+                @if ($duracionMedia)
+                    <div class="ms-auto text-sm text-slate-500 dark:text-slate-400">
+                        Duración media {{ array_filter($filtros) ? 'de este filtro' : '' }}: <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $duracionMedia }}</span>
+                    </div>
+                @endif
             </form>
 
             @if ($tareas->isEmpty())
@@ -71,6 +77,7 @@
                                 <th>Cliente</th>
                                 <th>Operario</th>
                                 <th>Estado</th>
+                                <th>Duración</th>
                                 <th>Evidencia</th>
                                 <th></th>
                             </tr>
@@ -89,6 +96,7 @@
                                             <span class="badge-pending">Pendiente</span>
                                         @endif
                                     </td>
+                                    <td>{{ $tarea->duracionFormateada() ?? '—' }}</td>
                                     <td>
                                         @if ($tarea->fotoEvidenciaUrl())
                                             <a href="{{ $tarea->fotoEvidenciaUrl() }}" target="_blank">
@@ -100,6 +108,7 @@
                                     </td>
                                     <td class="text-right space-x-3 row-actions">
                                         <a href="{{ route('admin.tareas.edit', $tarea) }}" class="text-brand-700 hover:underline">Editar</a>
+                                        <a href="{{ route('admin.tareas.duplicar', $tarea) }}" class="text-slate-600 dark:text-slate-400 hover:underline">Duplicar</a>
                                         <form method="POST" action="{{ route('admin.tareas.destroy', $tarea) }}" class="inline" onsubmit="return confirm('¿Eliminar esta tarea?');">
                                             @csrf
                                             @method('DELETE')

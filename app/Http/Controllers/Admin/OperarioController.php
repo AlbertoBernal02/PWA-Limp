@@ -69,7 +69,9 @@ class OperarioController extends Controller
      */
     public function edit(User $operario)
     {
-        return view('admin.operarios.edit', compact('operario'));
+        $ausencias = $operario->ausencias()->orderByDesc('fecha_inicio')->get();
+
+        return view('admin.operarios.edit', compact('operario', 'ausencias'));
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Operario;
 use App\Http\Controllers\Controller;
 use App\Models\Tarea;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class TareaController extends Controller
 {
@@ -15,7 +16,7 @@ class TareaController extends Controller
     {
         $tareas = $request->user()
             ->tareas()
-            ->with('cliente')
+            ->with(['cliente', 'herramientas'])
             ->whereDate('fecha', now()->toDateString())
             ->orderBy('hora_estimada')
             ->get();
@@ -31,7 +32,7 @@ class TareaController extends Controller
     {
         $tareas = $request->user()
             ->tareas()
-            ->with('cliente')
+            ->with(['cliente', 'herramientas'])
             ->where(function ($query) {
                 $query->whereDate('fecha', '<', now()->toDateString())
                     ->orWhere('estado', 'hecha');
@@ -44,6 +45,18 @@ class TareaController extends Controller
     }
 
     /**
+     * Marca el inicio real del trabajo en una tarea (para medir la duración real).
+     */
+    public function empezar(Request $request, Tarea $tarea)
+    {
+        abort_unless($tarea->operario_id === $request->user()->id, 403);
+
+        $tarea->empezar();
+
+        return redirect()->route('operario.tareas.index')->with('status', 'Tarea iniciada.');
+    }
+
+    /**
      * Marca una tarea del operario autenticado como hecha.
      */
     public function marcarHecha(Request $request, Tarea $tarea)
@@ -53,13 +66,19 @@ class TareaController extends Controller
         $data = $request->validate([
             'foto_evidencia' => ['nullable', 'image', 'max:4096'],
             'nota' => ['nullable', 'string', 'max:1000'],
+            'ocurrido_en' => ['nullable', 'date'],
+            'cantidades' => ['nullable', 'array'],
+            'cantidades.*' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $fotoPath = $request->hasFile('foto_evidencia')
             ? $request->file('foto_evidencia')->store('evidencias', 'public')
             : null;
 
-        $tarea->marcarHecha($fotoPath, $data['nota'] ?? null);
+        $completadaEn = ! empty($data['ocurrido_en']) ? Carbon::parse($data['ocurrido_en']) : null;
+
+        $tarea->marcarHecha($fotoPath, $data['nota'] ?? null, $completadaEn);
+        $tarea->registrarMaterialGastado($data['cantidades'] ?? []);
 
         return redirect()->route('operario.tareas.index')->with('status', 'Tarea marcada como hecha.');
     }

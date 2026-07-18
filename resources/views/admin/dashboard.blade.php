@@ -6,8 +6,41 @@
     <div class="py-8">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            @if ($tareasAtrasadas->isNotEmpty())
+                <div class="card p-5 ring-1 ring-inset ring-amber-300 dark:ring-amber-500/40 bg-amber-50 dark:bg-amber-500/10">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                        </svg>
+                        <h3 class="font-semibold text-amber-800 dark:text-amber-300">
+                            {{ $tareasAtrasadas->count() }} {{ $tareasAtrasadas->count() === 1 ? 'tarea atrasada' : 'tareas atrasadas' }}
+                        </h3>
+                    </div>
+                    <ul class="space-y-2">
+                        @foreach ($tareasAtrasadas as $tarea)
+                            @php
+                                $horaPrevista = $tarea->fecha->copy()->setTimeFromTimeString($tarea->hora_estimada ?? '00:00');
+                            @endphp
+                            <li class="flex flex-wrap justify-between gap-2 text-sm">
+                                <span class="text-amber-900 dark:text-amber-200">
+                                    <strong>{{ $tarea->cliente->nombre }}</strong>
+                                    — {{ $tarea->operario->name }}
+                                    @unless ($tarea->fecha->isToday())
+                                        · {{ $tarea->fecha->format('d/m/Y') }}
+                                    @endunless
+                                    @if ($tarea->hora_estimada)
+                                        · prevista a las {{ $horaPrevista->format('H:i') }}
+                                    @endif
+                                </span>
+                                <span class="text-amber-700 dark:text-amber-400 font-medium">{{ $horaPrevista->diffForHumans() }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <!-- Tarjetas de estadísticas -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="stat-card">
                     <div class="stat-icon bg-amber-100 text-amber-700">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -53,6 +86,18 @@
                     <div>
                         <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $totalClientes }}</p>
                         <p class="text-sm text-slate-500 dark:text-slate-400">Clientes</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-emerald-100 text-emerald-700">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $duracionMedia ?? '—' }}</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Duración media/tarea</p>
                     </div>
                 </div>
             </div>

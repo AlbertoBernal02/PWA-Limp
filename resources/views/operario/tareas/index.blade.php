@@ -68,6 +68,24 @@
                                 @if ($tarea->descripcion)
                                     <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">{{ $tarea->descripcion }}</p>
                                 @endif
+                                @if ($tarea->herramientas->isNotEmpty())
+                                    <div class="mt-2">
+                                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.187 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.052.68-.045 1.399-.45 1.951l-.313.44" />
+                                            </svg>
+                                            Herramientas a llevar
+                                        </p>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            @foreach ($tarea->herramientas as $herramienta)
+                                                <span class="badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{{ $herramienta->nombre }}</span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                @if ($tarea->estado === 'pendiente' && $tarea->iniciada_at)
+                                    <p class="text-xs text-brand-700 dark:text-brand-400 mt-2">En progreso desde las {{ $tarea->iniciada_at->format('H:i') }}</p>
+                                @endif
                             </div>
                         </div>
 
@@ -79,6 +97,9 @@
                                     </svg>
                                     Hecha
                                 </span>
+                                @if ($tarea->duracionFormateada())
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">Duración: {{ $tarea->duracionFormateada() }}</span>
+                                @endif
                                 @if ($tarea->fotoEvidenciaUrl())
                                     <a href="{{ $tarea->fotoEvidenciaUrl() }}" target="_blank">
                                         <img src="{{ $tarea->fotoEvidenciaUrl() }}" alt="Evidencia de la tarea" class="w-12 h-12 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-600">
@@ -87,35 +108,75 @@
                                 @if ($tarea->nota)
                                     <p class="text-xs text-slate-500 dark:text-slate-400 text-right">{{ $tarea->nota }}</p>
                                 @endif
-                            @else
-                                <form method="POST" action="{{ route('operario.tareas.marcar-hecha', $tarea) }}" enctype="multipart/form-data" class="flex flex-col items-end gap-2 w-full">
+                            @elseif (! $tarea->iniciada_at)
+                                <form method="POST" action="{{ route('operario.tareas.empezar', $tarea) }}">
                                     @csrf
                                     @method('PATCH')
-                                    <textarea
-                                        name="nota"
-                                        rows="2"
-                                        placeholder="Nota (opcional, ej. no estaba, dejé la llave con el vecino)"
-                                        class="field-input text-xs w-full"
-                                    ></textarea>
-                                    <label class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 cursor-pointer hover:text-brand-700 dark:hover:text-brand-400">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.344 3.071a49.52 49.52 0 015.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.24.383.645.643 1.11.71.386.054.77.113 1.152.177 1.432.239 2.429 1.493 2.429 2.909V18a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 18V9.574c0-1.416.997-2.67 2.429-2.909.382-.064.766-.123 1.151-.178a1.56 1.56 0 001.11-.71l.822-1.316a2.942 2.942 0 012.332-1.39z" />
-                                        </svg>
-                                        <span class="foto-nombre">Añadir foto (opcional)</span>
-                                        <input
-                                            type="file"
-                                            name="foto_evidencia"
-                                            accept="image/*"
-                                            capture="environment"
-                                            class="hidden"
-                                            onchange="this.closest('form').querySelector('.foto-nombre').textContent = this.files[0]?.name ?? 'Añadir foto (opcional)'"
-                                        >
-                                    </label>
-                                    <button type="submit" class="btn-primary">
-                                        Marcar hecha
+                                    <button type="submit" class="btn-secondary">
+                                        Empezar
                                     </button>
                                 </form>
+                            @else
+                                <button type="button" class="btn-primary" @click="$dispatch('open-modal', 'marcar-hecha-{{ $tarea->id }}')">
+                                    Marcar hecha
+                                </button>
+
+                                <x-modal :name="'marcar-hecha-'.$tarea->id">
+                                    <div class="p-6">
+                                        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">Finalizar tarea</h3>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ $tarea->cliente->nombre }}</p>
+
+                                        <form method="POST" action="{{ route('operario.tareas.marcar-hecha', $tarea) }}" enctype="multipart/form-data" class="space-y-4" data-marcar-hecha data-tarea-id="{{ $tarea->id }}" data-turbo="false">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            @if ($tarea->herramientas->isNotEmpty())
+                                                <div>
+                                                    <x-input-label value="Material gastado de lo que llevabas" />
+                                                    <div class="space-y-2 mt-2">
+                                                        @foreach ($tarea->herramientas as $herramienta)
+                                                            <div class="flex items-center justify-between gap-3">
+                                                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ $herramienta->nombre }}</span>
+                                                                <input type="number" min="0" name="cantidades[{{ $herramienta->id }}]" placeholder="0" class="field-input w-24 text-sm">
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <div>
+                                                <x-input-label value="Nota (opcional)" />
+                                                <textarea
+                                                    name="nota"
+                                                    rows="2"
+                                                    placeholder="Ej. no estaba, dejé la llave con el vecino; o: usé 2 bayetas que no llevaba apuntadas"
+                                                    class="field-input text-sm w-full mt-1"
+                                                ></textarea>
+                                            </div>
+
+                                            <label class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 cursor-pointer hover:text-brand-700 dark:hover:text-brand-400">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.344 3.071a49.52 49.52 0 015.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.24.383.645.643 1.11.71.386.054.77.113 1.152.177 1.432.239 2.429 1.493 2.429 2.909V18a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 18V9.574c0-1.416.997-2.67 2.429-2.909.382-.064.766-.123 1.151-.178a1.56 1.56 0 001.11-.71l.822-1.316a2.942 2.942 0 012.332-1.39z" />
+                                                </svg>
+                                                <span class="foto-nombre">Añadir foto (opcional)</span>
+                                                <input
+                                                    type="file"
+                                                    name="foto_evidencia"
+                                                    accept="image/*"
+                                                    capture="environment"
+                                                    class="hidden"
+                                                    onchange="this.closest('form').querySelector('.foto-nombre').textContent = this.files[0]?.name ?? 'Añadir foto (opcional)'"
+                                                >
+                                            </label>
+
+                                            <div class="flex items-center justify-end gap-3 pt-2">
+                                                <button type="button" class="btn-secondary" @click="show = false">Cancelar</button>
+                                                <button type="submit" class="btn-primary">Confirmar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </x-modal>
                             @endif
                         </div>
                     </div>

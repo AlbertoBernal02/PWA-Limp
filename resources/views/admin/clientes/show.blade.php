@@ -32,7 +32,7 @@
                 @endif
             </div>
 
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="stat-card">
                     <div class="stat-icon bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-400">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -66,6 +66,22 @@
                         <p class="text-sm text-slate-500 dark:text-slate-400">Cumplimiento</p>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-400">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-semibold text-slate-800 dark:text-slate-100">{{ $duracionMedia ?? '—' }}</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Duración media</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-5">
+                <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Informe mensual (facturación)</h3>
+                <x-exportar-informe :accion-base="route('admin.clientes.informe', $cliente)" :mes-por-defecto="now()->format('Y-m')" />
             </div>
 
             <div>
@@ -84,6 +100,7 @@
                                     <th>Hora</th>
                                     <th>Operario</th>
                                     <th>Estado</th>
+                                    <th>Duración</th>
                                     <th>Nota</th>
                                 </tr>
                             </thead>
@@ -100,6 +117,7 @@
                                                 <span class="badge-pending">Pendiente</span>
                                             @endif
                                         </td>
+                                        <td>{{ $tarea->duracionFormateada() ?? '—' }}</td>
                                         <td class="text-slate-500 dark:text-slate-400">{{ $tarea->nota ?: '—' }}</td>
                                     </tr>
                                 @endforeach

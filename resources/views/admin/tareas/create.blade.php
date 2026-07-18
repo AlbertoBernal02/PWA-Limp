@@ -67,6 +67,28 @@
                         <x-input-error :messages="$errors->get('descripcion')" class="mt-2" />
                     </div>
 
+                    @if ($herramientas->isNotEmpty())
+                        <div>
+                            <x-input-label value="Herramientas a llevar (opcional)" />
+                            <div class="flex flex-wrap gap-3 mt-1">
+                                @foreach ($herramientas as $herramienta)
+                                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg ring-1 ring-inset ring-slate-300 dark:ring-slate-600 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            name="herramienta_ids[]"
+                                            value="{{ $herramienta->id }}"
+                                            class="rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+                                            @checked(in_array($herramienta->id, old('herramienta_ids', [])))
+                                        >
+                                        {{ $herramienta->nombre }}
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">El operario las verá en la tarea antes de empezar.</p>
+                            <x-input-error :messages="$errors->get('herramienta_ids')" class="mt-2" />
+                        </div>
+                    @endif
+
                     <div class="flex items-center justify-end pt-2 gap-4">
                         <a href="{{ route('admin.tareas.index') }}" class="text-sm text-slate-600 dark:text-slate-400 hover:underline">Cancelar</a>
                         <x-primary-button>Crear tarea</x-primary-button>

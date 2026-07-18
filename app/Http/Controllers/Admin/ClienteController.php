@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\Tarea;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ClienteController extends Controller
 {
@@ -42,8 +47,60 @@ class ClienteController extends Controller
         $total = $cliente->tareas()->count();
         $hechas = $cliente->tareas()->where('estado', 'hecha')->count();
         $cumplimiento = $total > 0 ? round(($hechas / $total) * 100) : 0;
+        $duracionMedia = Tarea::duracionMediaFormateada($cliente->tareas());
 
-        return view('admin.clientes.show', compact('cliente', 'tareas', 'total', 'hechas', 'cumplimiento'));
+        return view('admin.clientes.show', compact('cliente', 'tareas', 'total', 'hechas', 'cumplimiento', 'duracionMedia'));
+    }
+
+    /**
+     * Informe mensual de tareas de un cliente, en PDF o CSV (para facturación).
+     */
+    public function informe(Request $request, Cliente $cliente)
+    {
+        $data = $request->validate([
+            'mes' => ['required', 'date_format:Y-m'],
+            'formato' => ['required', Rule::in(['pdf', 'csv'])],
+        ]);
+
+        $inicio = Carbon::createFromFormat('Y-m', $data['mes'])->startOfMonth();
+        $fin = $inicio->copy()->endOfMonth();
+
+        $tareas = $cliente->tareas()
+            ->with('operario')
+            ->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])
+            ->orderBy('fecha')
+            ->orderBy('hora_estimada')
+            ->get();
+
+        $totales = [
+            'total' => $tareas->count(),
+            'hechas' => $tareas->where('estado', 'hecha')->count(),
+        ];
+
+        $nombreArchivo = Str::slug($cliente->nombre).'-'.$data['mes'];
+
+        if ($data['formato'] === 'csv') {
+            return response()->streamDownload(function () use ($tareas) {
+                $salida = fopen('php://output', 'w');
+                fputcsv($salida, ['Fecha', 'Hora', 'Operario', 'Estado', 'Duración', 'Nota']);
+
+                foreach ($tareas as $tarea) {
+                    fputcsv($salida, [
+                        $tarea->fecha->format('d/m/Y'),
+                        $tarea->hora_estimada ? Carbon::parse($tarea->hora_estimada)->format('H:i') : '',
+                        $tarea->operario->name,
+                        $tarea->estado === 'hecha' ? 'Hecha' : 'Pendiente',
+                        $tarea->duracionFormateada() ?? '',
+                        $tarea->nota ?? '',
+                    ]);
+                }
+
+                fclose($salida);
+            }, "{$nombreArchivo}.csv", ['Content-Type' => 'text/csv']);
+        }
+
+        return Pdf::loadView('admin.informes.cliente', compact('cliente', 'tareas', 'totales', 'inicio'))
+            ->download("{$nombreArchivo}.pdf");
     }
 
     /**

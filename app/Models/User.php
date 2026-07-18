@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 #[Fillable(['name', 'email', 'password', 'role', 'avatar_path', 'telefono', 'activo'])]
 #[Hidden(['password', 'remember_token'])]
@@ -49,6 +50,33 @@ class User extends Authenticatable
     public function tareas(): HasMany
     {
         return $this->hasMany(Tarea::class, 'operario_id');
+    }
+
+    /**
+     * Fichajes de jornada (entrada/descanso/salida) de este operario.
+     */
+    public function fichajes(): HasMany
+    {
+        return $this->hasMany(Fichaje::class, 'operario_id');
+    }
+
+    /**
+     * Periodos de vacaciones/ausencia de este operario.
+     */
+    public function ausencias(): HasMany
+    {
+        return $this->hasMany(Ausencia::class, 'operario_id');
+    }
+
+    /**
+     * Si este operario tiene una ausencia registrada que cubre esa fecha.
+     */
+    public function estaAusente(Carbon $fecha): bool
+    {
+        return $this->ausencias()
+            ->whereDate('fecha_inicio', '<=', $fecha->toDateString())
+            ->whereDate('fecha_fin', '>=', $fecha->toDateString())
+            ->exists();
     }
 
     public function esAdmin(): bool

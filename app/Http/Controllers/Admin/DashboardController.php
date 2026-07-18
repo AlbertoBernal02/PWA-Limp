@@ -41,6 +41,15 @@ class DashboardController extends Controller
 
         $maxSemana = max(1, $semana->max('total'));
 
+        $tareasAtrasadas = Tarea::with(['cliente', 'operario'])
+            ->where('estado', 'pendiente')
+            ->whereDate('fecha', '<=', $hoy)
+            ->get()
+            ->filter(fn (Tarea $tarea) => $tarea->estaAtrasada())
+            ->sortBy(fn (Tarea $tarea) => $tarea->fecha->toDateString().($tarea->hora_estimada ?? '00:00'));
+
+        $duracionMedia = Tarea::duracionMediaFormateada(Tarea::query());
+
         return view('admin.dashboard', [
             'totalOperarios' => User::where('role', 'operario')->count(),
             'totalClientes' => Cliente::count(),
@@ -50,6 +59,8 @@ class DashboardController extends Controller
             'porOperarioHoy' => $porOperarioHoy,
             'semana' => $semana,
             'maxSemana' => $maxSemana,
+            'tareasAtrasadas' => $tareasAtrasadas,
+            'duracionMedia' => $duracionMedia,
         ]);
     }
 }

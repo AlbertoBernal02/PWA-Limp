@@ -28,8 +28,18 @@
                                 @if ($tarea->descripcion)
                                     <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">{{ $tarea->descripcion }}</p>
                                 @endif
+                                @if ($tarea->herramientas->isNotEmpty())
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        @foreach ($tarea->herramientas as $herramienta)
+                                            <span class="badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{{ $herramienta->nombre }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
                                 @if ($tarea->nota)
                                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 italic">"{{ $tarea->nota }}"</p>
+                                @endif
+                                @if ($tarea->duracionFormateada())
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Duración: {{ $tarea->duracionFormateada() }}</p>
                                 @endif
                             </div>
                         </div>

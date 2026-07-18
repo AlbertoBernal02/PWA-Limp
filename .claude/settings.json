@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='php.exe'\\\\\" | Select-Object ProcessId,CommandLine\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 41036,56352 -Force\")"
+    ]
+  }
+}

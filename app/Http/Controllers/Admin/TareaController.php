@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\Herramienta;
 use App\Models\Tarea;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class TareaController extends Controller
     {
         $filtros = $request->only(['q', 'fecha', 'operario_id', 'estado']);
 
-        $tareas = Tarea::with(['cliente', 'operario'])
+        $query = Tarea::with(['cliente', 'operario'])
             ->when($filtros['q'] ?? null, fn ($query, $q) => $query->where(function ($query) use ($q) {
                 $query->whereHas('cliente', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
                     ->orWhereHas('operario', fn ($query) => $query->where('name', 'like', "%{$q}%"))
@@ -25,15 +26,18 @@ class TareaController extends Controller
             }))
             ->when($filtros['fecha'] ?? null, fn ($query, $fecha) => $query->whereDate('fecha', $fecha))
             ->when($filtros['operario_id'] ?? null, fn ($query, $id) => $query->where('operario_id', $id))
-            ->when($filtros['estado'] ?? null, fn ($query, $estado) => $query->where('estado', $estado))
-            ->orderByDesc('fecha')
+            ->when($filtros['estado'] ?? null, fn ($query, $estado) => $query->where('estado', $estado));
+
+        $duracionMedia = Tarea::duracionMediaFormateada($query);
+
+        $tareas = $query->orderByDesc('fecha')
             ->orderBy('hora_estimada')
             ->paginate(15)
             ->withQueryString();
 
         $operarios = User::where('role', 'operario')->orderBy('name')->get();
 
-        return view('admin.tareas.index', compact('tareas', 'operarios', 'filtros'));
+        return view('admin.tareas.index', compact('tareas', 'operarios', 'filtros', 'duracionMedia'));
     }
 
     /**
@@ -42,8 +46,9 @@ class TareaController extends Controller
     public function create()
     {
         [$clientes, $operarios] = $this->opciones();
+        $herramientas = Herramienta::orderBy('nombre')->get();
 
-        return view('admin.tareas.create', compact('clientes', 'operarios'));
+        return view('admin.tareas.create', compact('clientes', 'operarios', 'herramientas'));
     }
 
     /**
@@ -60,6 +65,8 @@ class TareaController extends Controller
             'repetir_hasta' => ['nullable', 'date', 'after_or_equal:fecha'],
             'hora_estimada' => ['nullable', 'date_format:H:i'],
             'descripcion' => ['nullable', 'string'],
+            'herramienta_ids' => ['nullable', 'array'],
+            'herramienta_ids.*' => ['exists:herramientas,id'],
         ]);
 
         $fechas = [$data['fecha']];
@@ -75,24 +82,80 @@ class TareaController extends Controller
             }
         }
 
+        $operariosPorId = User::whereIn('id', $data['operario_ids'])->get()->keyBy('id');
+
         $creadas = 0;
+        $omitidas = 0;
 
         foreach ($data['operario_ids'] as $operarioId) {
+            $operario = $operariosPorId[$operarioId];
+
             foreach ($fechas as $fecha) {
-                Tarea::create([
+                if ($operario->estaAusente(\Illuminate\Support\Carbon::parse($fecha))) {
+                    $omitidas++;
+
+                    continue;
+                }
+
+                $tarea = Tarea::create([
                     'cliente_id' => $data['cliente_id'],
                     'operario_id' => $operarioId,
                     'fecha' => $fecha,
                     'hora_estimada' => $data['hora_estimada'] ?? null,
                     'descripcion' => $data['descripcion'] ?? null,
                 ]);
+
+                if (! empty($data['herramienta_ids'])) {
+                    $tarea->herramientas()->sync($data['herramienta_ids']);
+                }
+
                 $creadas++;
             }
         }
 
         $mensaje = $creadas === 1 ? 'Tarea creada correctamente.' : "{$creadas} tareas creadas correctamente.";
 
+        if ($omitidas > 0) {
+            $mensaje .= " {$omitidas} se ".($omitidas === 1 ? 'omitió' : 'omitieron').' por ausencia/vacaciones del operario en esas fechas.';
+        }
+
         return redirect()->route('admin.tareas.index')->with('status', $mensaje);
+    }
+
+    /**
+     * Formulario simple para duplicar una tarea suelta a otro día/cliente/operario,
+     * sin pasar por el formulario completo de repetición semanal.
+     */
+    public function duplicarForm(Tarea $tarea)
+    {
+        [$clientes, $operarios] = $this->opciones();
+        $herramientas = Herramienta::orderBy('nombre')->get();
+        $herramientaIdsSeleccionadas = $tarea->herramientas()->pluck('herramientas.id')->all();
+
+        return view('admin.tareas.duplicar', compact('tarea', 'clientes', 'operarios', 'herramientas', 'herramientaIdsSeleccionadas'));
+    }
+
+    /**
+     * Crea la copia de la tarea con los datos (posiblemente cambiados) del formulario de duplicar.
+     */
+    public function duplicar(Request $request, Tarea $tarea)
+    {
+        $data = $this->validarDatos($request);
+        $herramientaIds = $data['herramienta_ids'] ?? [];
+        unset($data['herramienta_ids']);
+
+        $operario = User::find($data['operario_id']);
+
+        if ($operario->estaAusente(\Illuminate\Support\Carbon::parse($data['fecha']))) {
+            return back()->withInput()->withErrors([
+                'fecha' => 'Ese operario tiene una ausencia/vacaciones registrada ese día.',
+            ]);
+        }
+
+        $nueva = Tarea::create($data);
+        $nueva->herramientas()->sync($herramientaIds);
+
+        return redirect()->route('admin.tareas.index')->with('status', 'Tarea duplicada correctamente.');
     }
 
     /**
@@ -101,8 +164,10 @@ class TareaController extends Controller
     public function edit(Tarea $tarea)
     {
         [$clientes, $operarios] = $this->opciones();
+        $herramientas = Herramienta::orderBy('nombre')->get();
+        $herramientaIdsSeleccionadas = $tarea->herramientas()->pluck('herramientas.id')->all();
 
-        return view('admin.tareas.edit', compact('tarea', 'clientes', 'operarios'));
+        return view('admin.tareas.edit', compact('tarea', 'clientes', 'operarios', 'herramientas', 'herramientaIdsSeleccionadas'));
     }
 
     /**
@@ -111,8 +176,11 @@ class TareaController extends Controller
     public function update(Request $request, Tarea $tarea)
     {
         $data = $this->validarDatos($request);
+        $herramientaIds = $data['herramienta_ids'] ?? [];
+        unset($data['herramienta_ids']);
 
         $tarea->update($data);
+        $tarea->herramientas()->sync($herramientaIds);
 
         return redirect()->route('admin.tareas.index')->with('status', 'Tarea actualizada correctamente.');
     }
@@ -135,6 +203,8 @@ class TareaController extends Controller
             'fecha' => ['required', 'date'],
             'hora_estimada' => ['nullable', 'date_format:H:i'],
             'descripcion' => ['nullable', 'string'],
+            'herramienta_ids' => ['nullable', 'array'],
+            'herramienta_ids.*' => ['exists:herramientas,id'],
         ]);
     }
 
