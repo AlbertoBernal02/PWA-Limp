@@ -86,7 +86,20 @@ web: clientes, operarios, tareas, fichajes e informes.
   indicar **cuánto material se ha gastado** de cada herramienta que llevaba (se
   descuenta del almacén al confirmar), con nota de texto opcional —también para
   apuntar material usado que no estaba en la lista— y foto de evidencia; una vez
-  hecha se muestra la duración real (fin − inicio).
+  hecha se muestra la duración real (fin − inicio). Al pulsar **Empezar** o
+  **Confirmar**, si el operario da permiso de ubicación, se guarda su posición GPS
+  de ese momento (nunca bloquea la acción: sin permiso, sin GPS o si tarda
+  demasiado, se ficha igual sin ubicación). El admin ve enlaces "Inicio"/"Fin" a
+  Google Maps en el listado de tareas — prueba de que el operario estuvo
+  realmente en el sitio.
+- **Optimizar ruta de hoy por cercanía**: con 3 o más tareas pendientes el mismo
+  día aparece este botón; reordena la lista por cercanía real entre clientes
+  (empezando por la primera tarea) en vez de por hora fija, y marca cada una con
+  "Parada 1, 2, 3...". Las direcciones se geocodifican solas (Photon/OSM, gratis)
+  la primera vez que hacen falta y se guardan en el cliente para no repetir la
+  llamada. Si hay una clave de OpenRouteService configurada (`ORS_API_KEY`, ver
+  `.env.example`) usa distancia real por carretera; si no, o si esa API falla,
+  usa distancia en línea recta — nunca depende del todo de un servicio externo.
 - **Historial**: tareas de días anteriores más las de hoy ya completadas.
 - **Fichar**: entrada / inicio y fin de descanso (opcional) / salida, con las horas
   de hoy y de la semana, y el mismo **gráfico de horas por día**.
@@ -132,6 +145,12 @@ de ejemplo (clientes, tareas). Los emails de los operarios se generan con Faker 
 cambian cada vez que se resiembra — consulta `App\Models\User::where('role','operario')->get()`
 si los necesitas.
 
+**Windows**: si al geocodificar una dirección o llamar a una API externa desde PHP
+(`Http::get(...)`) sale `cURL error 60: SSL certificate ... unable to get local
+issuer certificate`, es que PHP no tiene un certificado raíz configurado. Se
+arregla una vez por instalación: descarga `https://curl.se/ca/cacert.pem` y en tu
+`php.ini` pon `curl.cainfo` y `openssl.cafile` apuntando a esa ruta.
+
 ## Antes de desplegar a producción
 
 En el `.env` del hosting definitivo:
@@ -165,6 +184,8 @@ En el `.env` del hosting definitivo:
 | `public/sw.js`, `public/manifest.json` | Service Worker y manifest de la PWA |
 | `app/Console/Commands/AvisarTareasDelDia.php` | Aviso diario (email/push) de tareas pendientes; programado en `routes/console.php` |
 | `app/Notifications/AvisoTareasDelDia.php` | Contenido del aviso por canal (`mail`, `WebPushChannel`) |
+| `app/Services/Geocodificador.php` | Dirección de texto → lat/lng (Photon/OSM); cachea el resultado en el cliente |
+| `app/Services/OptimizadorRuta.php` | Orden de tareas por cercanía (OpenRouteService o línea recta) para "Optimizar ruta" |
 
 ## Convenciones del proyecto
 

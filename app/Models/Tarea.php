@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
-#[Fillable(['cliente_id', 'operario_id', 'fecha', 'hora_estimada', 'iniciada_at', 'descripcion', 'estado', 'completada_at', 'foto_evidencia_path', 'nota'])]
+#[Fillable([
+    'cliente_id', 'operario_id', 'fecha', 'hora_estimada', 'orden_ruta', 'iniciada_at', 'descripcion', 'estado',
+    'completada_at', 'foto_evidencia_path', 'nota', 'iniciada_lat', 'iniciada_lng', 'completada_lat', 'completada_lng',
+])]
 class Tarea extends Model
 {
     use HasFactory;
@@ -66,21 +69,29 @@ class Tarea extends Model
     /**
      * Marca el inicio real del trabajo. No pisa un inicio ya registrado
      * (evita que un doble clic o un reenvío alargue la tarea "hacia atrás").
+     * $lat/$lng son la posición del operario en ese momento (si el navegador
+     * la dio y el operario dio permiso); quedan como prueba de que estuvo ahí.
      */
-    public function empezar(?Carbon $en = null): void
+    public function empezar(?Carbon $en = null, ?float $lat = null, ?float $lng = null): void
     {
         if ($this->iniciada_at) {
             return;
         }
 
-        $this->update(['iniciada_at' => $en ?? now()]);
+        $this->update([
+            'iniciada_at' => $en ?? now(),
+            'iniciada_lat' => $lat,
+            'iniciada_lng' => $lng,
+        ]);
     }
 
-    public function marcarHecha(?string $fotoEvidenciaPath = null, ?string $nota = null, ?Carbon $completadaEn = null): void
+    public function marcarHecha(?string $fotoEvidenciaPath = null, ?string $nota = null, ?Carbon $completadaEn = null, ?float $lat = null, ?float $lng = null): void
     {
         $data = [
             'estado' => 'hecha',
             'completada_at' => $completadaEn ?? now(),
+            'completada_lat' => $lat,
+            'completada_lng' => $lng,
         ];
 
         if ($fotoEvidenciaPath) {
@@ -97,6 +108,24 @@ class Tarea extends Model
     public function fotoEvidenciaUrl(): ?string
     {
         return $this->foto_evidencia_path ? asset('storage/'.$this->foto_evidencia_path) : null;
+    }
+
+    /**
+     * Enlace a Google Maps con la posición registrada al empezar/marcar hecha,
+     * o null si el operario no dio permiso de ubicación (o el navegador no la dio).
+     */
+    public function ubicacionInicioUrl(): ?string
+    {
+        return $this->iniciada_lat && $this->iniciada_lng
+            ? "https://www.google.com/maps?q={$this->iniciada_lat},{$this->iniciada_lng}"
+            : null;
+    }
+
+    public function ubicacionFinUrl(): ?string
+    {
+        return $this->completada_lat && $this->completada_lng
+            ? "https://www.google.com/maps?q={$this->completada_lat},{$this->completada_lng}"
+            : null;
     }
 
     /**

@@ -122,6 +122,8 @@ class ClienteController extends Controller
             'telefono' => ['nullable', 'string', 'max:50'],
             'notas' => ['nullable', 'string'],
             'foto' => ['nullable', 'image', 'max:4096'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
 
         unset($data['foto']);
@@ -154,6 +156,8 @@ class ClienteController extends Controller
             'telefono' => ['nullable', 'string', 'max:50'],
             'notas' => ['nullable', 'string'],
             'foto' => ['nullable', 'image', 'max:4096'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
 
         unset($data['foto']);

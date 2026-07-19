@@ -53,6 +53,8 @@ async function enviar(registro) {
     if (registro.cantidades) {
         Object.entries(registro.cantidades).forEach(([clave, valor]) => formData.append(clave, valor));
     }
+    if (registro.lat != null) formData.append('lat', registro.lat);
+    if (registro.lng != null) formData.append('lng', registro.lng);
 
     const respuesta = await fetch(registro.url, {
         method: 'POST',

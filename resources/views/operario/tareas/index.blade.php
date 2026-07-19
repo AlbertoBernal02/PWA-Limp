@@ -2,6 +2,7 @@
     $total = $tareas->count();
     $hechas = $tareas->where('estado', 'hecha')->count();
     $porcentaje = $total > 0 ? round(($hechas / $total) * 100) : 0;
+    $pendientes = $tareas->where('estado', 'pendiente')->count();
 @endphp
 
 <x-app-layout>
@@ -17,6 +18,20 @@
     <div class="py-8">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            @unless ($estaTrabajando)
+                <div class="card p-5 border-l-4 border-amber-400 dark:border-amber-500 flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-6 h-6 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        <p class="text-sm text-slate-700 dark:text-slate-300">
+                            Todavía no has fichado la entrada — hazlo antes de marcar tareas como hechas.
+                        </p>
+                    </div>
+                    <a href="{{ route('operario.fichajes.index') }}" class="btn-primary shrink-0">Fichar entrada</a>
+                </div>
+            @endunless
+
             @if ($total > 0)
                 <div class="card p-5">
                     <div class="flex justify-between text-sm mb-2">
@@ -27,6 +42,18 @@
                         <div class="bg-brand-500 h-2.5 rounded-full transition-all" style="width: {{ $porcentaje }}%"></div>
                     </div>
                 </div>
+            @endif
+
+            @if ($pendientes >= 3)
+                <form method="POST" action="{{ route('operario.tareas.optimizar-ruta') }}">
+                    @csrf
+                    <button type="submit" class="btn-secondary w-full flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                        </svg>
+                        Optimizar ruta de hoy por cercanía
+                    </button>
+                </form>
             @endif
 
             @forelse ($tareas as $tarea)
@@ -42,6 +69,11 @@
                             @endif
                             <div>
                                 <div class="flex items-center gap-2">
+                                    @if ($tarea->estado === 'pendiente' && $tarea->orden_ruta)
+                                        <span class="badge bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-400" title="Orden sugerido de la ruta de hoy">
+                                            Parada {{ $tarea->orden_ruta }}
+                                        </span>
+                                    @endif
                                     <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ $tarea->cliente->nombre }}</h3>
                                     @if ($tarea->cliente->fotoUrl() && $tarea->hora_estimada)
                                         <span class="text-xs font-semibold text-brand-700 dark:text-brand-400">{{ \Illuminate\Support\Carbon::parse($tarea->hora_estimada)->format('H:i') }}</span>
@@ -109,7 +141,7 @@
                                     <p class="text-xs text-slate-500 dark:text-slate-400 text-right">{{ $tarea->nota }}</p>
                                 @endif
                             @elseif (! $tarea->iniciada_at)
-                                <form method="POST" action="{{ route('operario.tareas.empezar', $tarea) }}">
+                                <form method="POST" action="{{ route('operario.tareas.empezar', $tarea) }}" data-empezar-tarea data-turbo="false">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="btn-secondary">

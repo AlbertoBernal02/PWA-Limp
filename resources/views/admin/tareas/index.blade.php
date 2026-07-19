@@ -79,6 +79,7 @@
                                 <th>Estado</th>
                                 <th>Duración</th>
                                 <th>Evidencia</th>
+                                <th>Ubicación</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -103,6 +104,29 @@
                                                 <img src="{{ $tarea->fotoEvidenciaUrl() }}" alt="Evidencia" class="w-9 h-9 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-600">
                                             </a>
                                         @else
+                                            <span class="text-slate-300 dark:text-slate-600">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="space-x-2">
+                                        @if ($tarea->ubicacionInicioUrl())
+                                            <a href="{{ $tarea->ubicacionInicioUrl() }}" target="_blank" rel="noopener" title="Ubicación al empezar" class="text-slate-500 dark:text-slate-400 hover:text-brand-700 dark:hover:text-brand-400 inline-flex items-center gap-0.5">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                                                </svg>
+                                                Inicio
+                                            </a>
+                                        @endif
+                                        @if ($tarea->ubicacionFinUrl())
+                                            <a href="{{ $tarea->ubicacionFinUrl() }}" target="_blank" rel="noopener" title="Ubicación al marcar hecha" class="text-slate-500 dark:text-slate-400 hover:text-brand-700 dark:hover:text-brand-400 inline-flex items-center gap-0.5">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                                                </svg>
+                                                Fin
+                                            </a>
+                                        @endif
+                                        @if (! $tarea->ubicacionInicioUrl() && ! $tarea->ubicacionFinUrl())
                                             <span class="text-slate-300 dark:text-slate-600">—</span>
                                         @endif
                                     </td>

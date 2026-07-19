@@ -8,6 +8,8 @@
             <div class="card p-6">
                 <form method="POST" action="{{ route('admin.clientes.store') }}" class="space-y-4" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="lat" value="{{ old('lat') }}">
+                    <input type="hidden" name="lng" value="{{ old('lng') }}">
 
                     <div>
                         <x-input-label for="foto" value="Foto del local/inmueble" />

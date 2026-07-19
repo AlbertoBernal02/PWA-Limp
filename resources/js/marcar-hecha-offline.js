@@ -1,4 +1,5 @@
 import { encolarMarcarHecha, hayPendientePara } from './offline-queue';
+import { obtenerUbicacion } from './geolocation';
 
 function marcarComoPendienteEnPantalla(form) {
     const contenedor = form.parentElement;
@@ -17,13 +18,21 @@ export function initMarcarHechaOffline() {
 
         event.preventDefault();
 
+        const ubicacion = await obtenerUbicacion();
+
         if (navigator.onLine) {
             try {
+                const datosOnline = new FormData(form);
+                if (ubicacion) {
+                    datosOnline.set('lat', ubicacion.lat);
+                    datosOnline.set('lng', ubicacion.lng);
+                }
+
                 // Sin "ocurrido_en": confiamos en la hora del servidor, más fiable que
                 // el reloj del dispositivo cuando la petición llega al instante.
                 const respuesta = await fetch(form.action, {
                     method: 'POST',
-                    body: new FormData(form),
+                    body: datosOnline,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 });
 
@@ -60,6 +69,8 @@ export function initMarcarHechaOffline() {
             foto: foto && foto.size ? foto : null,
             fotoNombre: foto?.name,
             cantidades,
+            lat: ubicacion?.lat ?? null,
+            lng: ubicacion?.lng ?? null,
         });
 
         marcarComoPendienteEnPantalla(form);

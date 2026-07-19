@@ -7,6 +7,7 @@ import { initMarcarHechaOffline } from './marcar-hecha-offline';
 import { initOfflineSync } from './offline-queue';
 import { initInstallPrompt } from './install-prompt';
 import { initPushNotifications } from './push-notifications';
+import { initEmpezarTarea } from './empezar-tarea';
 
 window.Alpine = Alpine;
 
@@ -22,3 +23,4 @@ initMarcarHechaOffline();
 initOfflineSync();
 initInstallPrompt();
 initPushNotifications();
+initEmpezarTarea();

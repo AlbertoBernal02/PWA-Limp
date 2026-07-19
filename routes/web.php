@@ -60,6 +60,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 Route::middleware(['auth', 'role:operario'])->prefix('operario')->name('operario.')->group(function () {
     Route::get('tareas', [OperarioTareaController::class, 'index'])->name('tareas.index');
+    Route::post('tareas/optimizar-ruta', [OperarioTareaController::class, 'optimizarRuta'])->name('tareas.optimizar-ruta');
     Route::get('tareas/historial', [OperarioTareaController::class, 'historial'])->name('tareas.historial');
     Route::patch('tareas/{tarea}/empezar', [OperarioTareaController::class, 'empezar'])->name('tareas.empezar');
     Route::patch('tareas/{tarea}/marcar-hecha', [OperarioTareaController::class, 'marcarHecha'])->name('tareas.marcar-hecha');

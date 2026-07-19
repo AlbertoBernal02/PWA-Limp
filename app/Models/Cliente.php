@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nombre', 'direccion', 'telefono', 'notas', 'foto_path'])]
+#[Fillable(['nombre', 'direccion', 'telefono', 'notas', 'foto_path', 'lat', 'lng'])]
 class Cliente extends Model
 {
     use HasFactory;
@@ -20,5 +20,10 @@ class Cliente extends Model
     public function fotoUrl(): ?string
     {
         return $this->foto_path ? asset('storage/'.$this->foto_path) : null;
+    }
+
+    public function tieneCoordenadas(): bool
+    {
+        return $this->lat !== null && $this->lng !== null;
     }
 }

@@ -9,6 +9,8 @@
                 <form method="POST" action="{{ route('admin.clientes.update', $cliente) }}" class="space-y-4" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="lat" value="{{ old('lat', $cliente->lat) }}">
+                    <input type="hidden" name="lng" value="{{ old('lng', $cliente->lng) }}">
 
                     <div>
                         <x-input-label for="foto" value="Foto del local/inmueble" />

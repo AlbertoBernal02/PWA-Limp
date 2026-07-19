@@ -22,6 +22,16 @@ class Jornada
         };
     }
 
+    /**
+     * Si, según el último fichaje registrado, el operario está ahora mismo
+     * "dentro" de su jornada y trabajando (ha fichado entrada y no está de
+     * descanso ni ha fichado ya la salida).
+     */
+    public static function estaTrabajando(?string $ultimoTipo): bool
+    {
+        return in_array($ultimoTipo, ['entrada', 'fin_descanso'], true);
+    }
+
     public static function etiqueta(string $tipo): string
     {
         return match ($tipo) {

@@ -20,8 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Sin proxy inverso delante (Cloudflare, balanceador...) no hay que confiar en
         // las cabeceras X-Forwarded-*: cualquiera podría falsificar su IP con ellas.
-        // Si el hosting final sí pone uno delante, indica sus IPs en TRUSTED_PROXIES.
-        $middleware->trustProxies(at: env('TRUSTED_PROXIES') ? explode(',', env('TRUSTED_PROXIES')) : []);
+        // No llamamos aquí a trustProxies(at:) porque en este punto del arranque
+        // env()/config() todavía no están listos; la lista de proxies de confianza
+        // se define en config/trustedproxy.php (TRUSTED_PROXIES en .env), que Laravel
+        // lee dentro del propio middleware, ya en tiempo de petición.
 
         $middleware->web(append: [AddSecurityHeaders::class]);
     })

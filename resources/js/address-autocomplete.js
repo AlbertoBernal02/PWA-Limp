@@ -31,7 +31,21 @@ async function buscarDirecciones(query, signal) {
         const soloCalles = (datos.features || []).filter((f) => f.properties.osm_key !== 'place' || f.properties.type === 'street');
         const features = numeroForzado && soloCalles.length ? soloCalles : (datos.features || []);
 
-        return [...new Set(features.map((f) => formatearResultado(f, numeroForzado)).filter(Boolean))];
+        // GeoJSON: coordinates = [lng, lat]. Deduplicamos por el texto formateado
+        // (Photon a veces repite el mismo sitio con variantes casi idénticas).
+        const vistos = new Set();
+        const resultados = [];
+
+        features.forEach((f) => {
+            const texto = formatearResultado(f, numeroForzado);
+            if (! texto || vistos.has(texto)) return;
+            vistos.add(texto);
+
+            const [lng, lat] = f.geometry?.coordinates ?? [];
+            resultados.push({ texto, lat, lng });
+        });
+
+        return resultados;
     } catch (error) {
         return [];
     }
@@ -56,6 +70,11 @@ export function initAddressAutocomplete() {
         }
     }
 
+    function inputsDeCoordenadas(input) {
+        const form = input.closest('form');
+        return form ? [form.querySelector('input[name="lat"]'), form.querySelector('input[name="lng"]')] : [null, null];
+    }
+
     function mostrarResultados(input, direcciones) {
         cerrarDropdown();
         if (! direcciones.length) return;
@@ -63,13 +82,18 @@ export function initAddressAutocomplete() {
         dropdown = document.createElement('div');
         dropdown.className = 'address-autocomplete-list';
 
-        direcciones.forEach((direccion) => {
+        direcciones.forEach(({ texto, lat, lng }) => {
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'address-autocomplete-item';
-            item.textContent = direccion;
+            item.textContent = texto;
             item.addEventListener('click', () => {
-                input.value = direccion;
+                input.value = texto;
+
+                const [inputLat, inputLng] = inputsDeCoordenadas(input);
+                if (inputLat) inputLat.value = lat ?? '';
+                if (inputLng) inputLng.value = lng ?? '';
+
                 cerrarDropdown();
                 input.focus();
             });
@@ -84,6 +108,12 @@ export function initAddressAutocomplete() {
     document.addEventListener('input', (event) => {
         const input = event.target;
         if (! input.matches?.('[data-address-autocomplete]')) return;
+
+        // El texto ya no coincide con la sugerencia que se pudo elegir antes:
+        // las coordenadas guardadas quedarían desincronizadas con la dirección.
+        const [inputLat, inputLng] = inputsDeCoordenadas(input);
+        if (inputLat) inputLat.value = '';
+        if (inputLng) inputLng.value = '';
 
         clearTimeout(debounceTimer);
         const valor = input.value.trim();
