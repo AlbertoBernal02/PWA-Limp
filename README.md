@@ -95,6 +95,26 @@ web: clientes, operarios, tareas, fichajes e informes.
 - **Instalable**: prompt de instalación nativo en Android/desktop; instrucciones
   manuales en iOS (Safari no expone la API de instalación).
 
+### Aviso diario de tareas (6:00)
+
+Cada día a las 6:00 (Scheduler de Laravel, comando `app:avisar-tareas-del-dia`) se
+avisa a cada operario activo con tareas pendientes ese día, por dos canales:
+
+- **Email** (siempre) — usa el `MAIL_MAILER` configurado; en local con `log` el
+  correo se escribe en `storage/logs/laravel.log`.
+- **Notificación push del navegador** (si el operario la activó) — icono de
+  campana en la barra de navegación (admin y operario). Al pulsarlo pide permiso
+  de notificaciones y suscribe el dispositivo; un segundo clic desactiva el aviso
+  en ese dispositivo. Requiere HTTPS en producción (en local funciona por
+  `localhost`) y, en iOS, tener la PWA instalada.
+
+Una suscripción push corrupta o caducada no bloquea el aviso a los demás
+operarios — se registra el error y se continúa (`AvisarTareasDelDia`).
+
+WhatsApp Business API queda pendiente como tercer canal futuro; con el sistema de
+`Notification` de Laravel ya montado, añadirlo es solo sumar un canal más en
+`AvisoTareasDelDia::via()`, sin tocar el resto.
+
 ## Instalación local
 
 ```bash
@@ -112,6 +132,25 @@ de ejemplo (clientes, tareas). Los emails de los operarios se generan con Faker 
 cambian cada vez que se resiembra — consulta `App\Models\User::where('role','operario')->get()`
 si los necesitas.
 
+## Antes de desplegar a producción
+
+En el `.env` del hosting definitivo:
+
+- **`APP_ENV=production`** y **`APP_DEBUG=false`** — con `APP_DEBUG=true` cualquier
+  error muestra rutas del servidor, variables de entorno y consultas SQL a quien lo
+  provoque. Es el punto más importante de esta lista.
+- **`APP_URL`** con el dominio real y HTTPS (`https://...`).
+- La cookie de sesión se marca `secure` automáticamente al poner `APP_ENV=production`
+  (ver `config/session.php`), así que no hace falta tocar `SESSION_SECURE_COOKIE` a
+  mano salvo que quieras lo contrario.
+- **`TRUSTED_PROXIES`** solo si el hosting pone un proxy inverso o CDN (Cloudflare,
+  balanceador...) delante de la app; si no, déjalo vacío.
+- **`VAPID_SUBJECT`/`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`** — genera un juego
+  propio con `php artisan webpush:vapid` (no reutilices el de local/desarrollo).
+- **Cron del hosting**: añade `* * * * * php /ruta/al/proyecto/artisan schedule:run >> /dev/null 2>&1`
+  — sin esto, el Scheduler de Laravel nunca dispara el aviso diario de las 6:00 ni
+  ninguna otra tarea programada futura.
+
 ## Estructura relevante
 
 | Carpeta/archivo | Contenido |
@@ -122,8 +161,10 @@ si los necesitas.
 | `app/Http/Controllers/Operario/` | Controladores de la app del operario |
 | `resources/views/admin/` | Vistas del panel |
 | `resources/views/operario/` | Vistas de la app del operario |
-| `resources/js/` | Turbo, menú contextual, autocompletado de direcciones, cola offline, prompt de instalación |
+| `resources/js/` | Turbo, menú contextual, autocompletado de direcciones, cola offline, prompt de instalación, notificaciones push |
 | `public/sw.js`, `public/manifest.json` | Service Worker y manifest de la PWA |
+| `app/Console/Commands/AvisarTareasDelDia.php` | Aviso diario (email/push) de tareas pendientes; programado en `routes/console.php` |
+| `app/Notifications/AvisoTareasDelDia.php` | Contenido del aviso por canal (`mail`, `WebPushChannel`) |
 
 ## Convenciones del proyecto
 
@@ -133,5 +174,6 @@ si los necesitas.
 
 ## Pendiente / ideas futuras
 
-- Notificación diaria por email al operario con sus tareas del día.
+- WhatsApp Business API como canal adicional del aviso diario (ver sección de
+  arriba — solo hay que añadir un canal a `AvisoTareasDelDia::via()`).
 - Fotos "antes/después" en la evidencia de la tarea.

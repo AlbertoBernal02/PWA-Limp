@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,7 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
         ]);
 
-        $middleware->trustProxies(at: '*');
+        // Sin proxy inverso delante (Cloudflare, balanceador...) no hay que confiar en
+        // las cabeceras X-Forwarded-*: cualquiera podría falsificar su IP con ellas.
+        // Si el hosting final sí pone uno delante, indica sus IPs en TRUSTED_PROXIES.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES') ? explode(',', env('TRUSTED_PROXIES')) : []);
+
+        $middleware->web(append: [AddSecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

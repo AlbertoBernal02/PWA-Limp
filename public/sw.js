@@ -1,4 +1,4 @@
-const CACHE = 'nitido-v1';
+const CACHE = 'nitido-v2';
 const APP_SHELL = ['/offline.html', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -15,6 +15,35 @@ self.addEventListener('activate', (event) => {
         ))
     );
     self.clients.claim();
+});
+
+self.addEventListener('push', (event) => {
+    if (! event.data) return;
+
+    const payload = event.data.json();
+
+    event.waitUntil(
+        self.registration.showNotification(payload.title, {
+            body: payload.body,
+            icon: payload.icon,
+            tag: payload.tag,
+            data: payload.data,
+        })
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const url = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+            const abierto = clients.find((cliente) => cliente.url.endsWith(url));
+            if (abierto) return abierto.focus();
+            return self.clients.openWindow(url);
+        })
+    );
 });
 
 self.addEventListener('fetch', (event) => {

@@ -6,6 +6,7 @@ import { initAddressAutocomplete } from './address-autocomplete';
 import { initMarcarHechaOffline } from './marcar-hecha-offline';
 import { initOfflineSync } from './offline-queue';
 import { initInstallPrompt } from './install-prompt';
+import { initPushNotifications } from './push-notifications';
 
 window.Alpine = Alpine;
 
@@ -20,3 +21,4 @@ initAddressAutocomplete();
 initMarcarHechaOffline();
 initOfflineSync();
 initInstallPrompt();
+initPushNotifications();
