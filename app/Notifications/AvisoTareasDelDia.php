@@ -33,7 +33,7 @@ class AvisoTareasDelDia extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Tus tareas de hoy — Nítido')
+            ->subject('Tus tareas de hoy — Sensilimp')
             ->greeting('¡Buenos días, '.explode(' ', $notifiable->name)[0].'!')
             ->line($this->totalTareas === 1
                 ? 'Hoy tienes 1 tarea asignada.'

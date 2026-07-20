@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Herramienta;
 use App\Models\Tarea;
+use App\Models\Trabajo;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -16,9 +17,9 @@ class TareaController extends Controller
      */
     public function index(Request $request)
     {
-        $filtros = $request->only(['q', 'fecha', 'operario_id', 'estado']);
+        $filtros = $request->only(['q', 'fecha', 'operario_id', 'estado', 'trabajo_id']);
 
-        $query = Tarea::with(['cliente', 'operario'])
+        $query = Tarea::with(['cliente', 'operario', 'trabajo'])
             ->when($filtros['q'] ?? null, fn ($query, $q) => $query->where(function ($query) use ($q) {
                 $query->whereHas('cliente', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
                     ->orWhereHas('operario', fn ($query) => $query->where('name', 'like', "%{$q}%"))
@@ -26,7 +27,8 @@ class TareaController extends Controller
             }))
             ->when($filtros['fecha'] ?? null, fn ($query, $fecha) => $query->whereDate('fecha', $fecha))
             ->when($filtros['operario_id'] ?? null, fn ($query, $id) => $query->where('operario_id', $id))
-            ->when($filtros['estado'] ?? null, fn ($query, $estado) => $query->where('estado', $estado));
+            ->when($filtros['estado'] ?? null, fn ($query, $estado) => $query->where('estado', $estado))
+            ->when($filtros['trabajo_id'] ?? null, fn ($query, $id) => $query->where('trabajo_id', $id));
 
         $duracionMedia = Tarea::duracionMediaFormateada($query);
 
@@ -36,8 +38,9 @@ class TareaController extends Controller
             ->withQueryString();
 
         $operarios = User::where('role', 'operario')->orderBy('name')->get();
+        $trabajos = Trabajo::orderBy('nombre')->get();
 
-        return view('admin.tareas.index', compact('tareas', 'operarios', 'filtros', 'duracionMedia'));
+        return view('admin.tareas.index', compact('tareas', 'operarios', 'trabajos', 'filtros', 'duracionMedia'));
     }
 
     /**
@@ -47,8 +50,9 @@ class TareaController extends Controller
     {
         [$clientes, $operarios] = $this->opciones();
         $herramientas = Herramienta::orderBy('nombre')->get();
+        $trabajos = Trabajo::with('herramientas')->orderBy('nombre')->get();
 
-        return view('admin.tareas.create', compact('clientes', 'operarios', 'herramientas'));
+        return view('admin.tareas.create', compact('clientes', 'operarios', 'herramientas', 'trabajos'));
     }
 
     /**
@@ -65,6 +69,7 @@ class TareaController extends Controller
             'repetir_hasta' => ['nullable', 'date', 'after_or_equal:fecha'],
             'hora_estimada' => ['nullable', 'date_format:H:i'],
             'descripcion' => ['nullable', 'string'],
+            'trabajo_id' => ['nullable', 'exists:trabajos,id'],
             'herramienta_ids' => ['nullable', 'array'],
             'herramienta_ids.*' => ['exists:herramientas,id'],
         ]);
@@ -103,6 +108,7 @@ class TareaController extends Controller
                     'fecha' => $fecha,
                     'hora_estimada' => $data['hora_estimada'] ?? null,
                     'descripcion' => $data['descripcion'] ?? null,
+                    'trabajo_id' => $data['trabajo_id'] ?? null,
                 ]);
 
                 if (! empty($data['herramienta_ids'])) {
@@ -130,9 +136,10 @@ class TareaController extends Controller
     {
         [$clientes, $operarios] = $this->opciones();
         $herramientas = Herramienta::orderBy('nombre')->get();
+        $trabajos = Trabajo::with('herramientas')->orderBy('nombre')->get();
         $herramientaIdsSeleccionadas = $tarea->herramientas()->pluck('herramientas.id')->all();
 
-        return view('admin.tareas.duplicar', compact('tarea', 'clientes', 'operarios', 'herramientas', 'herramientaIdsSeleccionadas'));
+        return view('admin.tareas.duplicar', compact('tarea', 'clientes', 'operarios', 'herramientas', 'trabajos', 'herramientaIdsSeleccionadas'));
     }
 
     /**
@@ -165,9 +172,10 @@ class TareaController extends Controller
     {
         [$clientes, $operarios] = $this->opciones();
         $herramientas = Herramienta::orderBy('nombre')->get();
+        $trabajos = Trabajo::with('herramientas')->orderBy('nombre')->get();
         $herramientaIdsSeleccionadas = $tarea->herramientas()->pluck('herramientas.id')->all();
 
-        return view('admin.tareas.edit', compact('tarea', 'clientes', 'operarios', 'herramientas', 'herramientaIdsSeleccionadas'));
+        return view('admin.tareas.edit', compact('tarea', 'clientes', 'operarios', 'herramientas', 'trabajos', 'herramientaIdsSeleccionadas'));
     }
 
     /**
@@ -203,6 +211,7 @@ class TareaController extends Controller
             'fecha' => ['required', 'date'],
             'hora_estimada' => ['nullable', 'date_format:H:i'],
             'descripcion' => ['nullable', 'string'],
+            'trabajo_id' => ['nullable', 'exists:trabajos,id'],
             'herramienta_ids' => ['nullable', 'array'],
             'herramienta_ids.*' => ['exists:herramientas,id'],
         ]);

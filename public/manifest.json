@@ -1,13 +1,13 @@
 {
-    "name": "Nítido — Gestión de tareas de limpieza",
-    "short_name": "Nítido",
+    "name": "Sensilimp — Gestión de tareas de limpieza",
+    "short_name": "Sensilimp",
     "description": "Consulta y gestiona las tareas diarias de limpieza asignadas a cada operario.",
     "start_url": "/dashboard",
     "id": "/dashboard",
     "scope": "/",
     "display": "standalone",
     "background_color": "#f8fafc",
-    "theme_color": "#158c78",
+    "theme_color": "#0e95cf",
     "orientation": "portrait-primary",
     "lang": "es",
     "icons": [

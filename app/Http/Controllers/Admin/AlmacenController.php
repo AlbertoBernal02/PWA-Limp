@@ -5,21 +5,23 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Herramienta;
 use App\Models\Hueco;
+use App\Models\Trabajo;
 use Illuminate\Http\Request;
 
 class AlmacenController extends Controller
 {
     /**
-     * Mapa del almacén: cuadrícula de huecos con las herramientas guardadas en cada uno.
+     * Mapa del almacén: cuadrícula de huecos con las herramientas y trabajos guardados en cada uno.
      */
     public function index()
     {
-        $huecos = Hueco::with('herramientas')->get()->keyBy(fn ($hueco) => $hueco->fila.'-'.$hueco->columna);
+        $huecos = Hueco::with('herramientas', 'trabajos')->get()->keyBy(fn ($hueco) => $hueco->fila.'-'.$hueco->columna);
         $filas = Hueco::max('fila') ?? 0;
         $columnas = Hueco::max('columna') ?? 0;
         $herramientas = Herramienta::orderBy('nombre')->get();
+        $trabajos = Trabajo::with('herramientas')->orderBy('nombre')->get();
 
-        return view('admin.almacen.index', compact('huecos', 'filas', 'columnas', 'herramientas'));
+        return view('admin.almacen.index', compact('huecos', 'filas', 'columnas', 'herramientas', 'trabajos'));
     }
 
     /**
@@ -53,17 +55,81 @@ class AlmacenController extends Controller
     }
 
     /**
-     * Marca qué herramientas están guardadas en este hueco. Las que se desmarcan
-     * quedan sin ubicación; no toca las que están asignadas a otros huecos.
+     * Marca qué herramientas y trabajos están guardados en este hueco (checklists
+     * del modal, igual en móvil y escritorio). Ambas relaciones son independientes
+     * de las de otros huecos: esto solo cambia lo que toca a ESTE hueco.
      */
     public function asignar(Request $request, Hueco $hueco)
     {
-        $ids = $request->input('herramientas', []);
-
-        Herramienta::where('hueco_id', $hueco->id)->whereNotIn('id', $ids)->update(['hueco_id' => null]);
-        Herramienta::whereIn('id', $ids)->update(['hueco_id' => $hueco->id]);
+        $hueco->herramientas()->sync($request->input('herramientas', []));
+        $hueco->trabajos()->sync($request->input('trabajos', []));
 
         return redirect()->route('admin.almacen.index')->with('status', 'Hueco '.$hueco->codigo().' actualizado.');
+    }
+
+    /**
+     * Añade una herramienta a un hueco (arrastrar y soltar en escritorio).
+     * No quita la herramienta de otros huecos donde ya estuviera.
+     */
+    public function agregarHerramienta(Request $request, Hueco $hueco)
+    {
+        $data = $request->validate([
+            'herramienta_id' => ['required', 'exists:herramientas,id'],
+        ]);
+
+        $hueco->herramientas()->syncWithoutDetaching($data['herramienta_id']);
+
+        if ($request->wantsJson()) {
+            return response()->noContent();
+        }
+
+        return redirect()->route('admin.almacen.index')->with('status', 'Herramienta añadida al hueco '.$hueco->codigo().'.');
+    }
+
+    /**
+     * Quita una herramienta de un hueco concreto (botón "×" en la tarjeta).
+     */
+    public function quitarHerramienta(Request $request, Hueco $hueco, Herramienta $herramienta)
+    {
+        $hueco->herramientas()->detach($herramienta->id);
+
+        if ($request->wantsJson()) {
+            return response()->noContent();
+        }
+
+        return redirect()->route('admin.almacen.index')->with('status', $herramienta->nombre.' quitada del hueco '.$hueco->codigo().'.');
+    }
+
+    /**
+     * Añade un trabajo a un hueco (arrastrar y soltar en escritorio).
+     */
+    public function agregarTrabajo(Request $request, Hueco $hueco)
+    {
+        $data = $request->validate([
+            'trabajo_id' => ['required', 'exists:trabajos,id'],
+        ]);
+
+        $hueco->trabajos()->syncWithoutDetaching($data['trabajo_id']);
+
+        if ($request->wantsJson()) {
+            return response()->noContent();
+        }
+
+        return redirect()->route('admin.almacen.index')->with('status', 'Trabajo añadido al hueco '.$hueco->codigo().'.');
+    }
+
+    /**
+     * Quita un trabajo de un hueco concreto.
+     */
+    public function quitarTrabajo(Request $request, Hueco $hueco, Trabajo $trabajo)
+    {
+        $hueco->trabajos()->detach($trabajo->id);
+
+        if ($request->wantsJson()) {
+            return response()->noContent();
+        }
+
+        return redirect()->route('admin.almacen.index')->with('status', $trabajo->nombre.' quitado del hueco '.$hueco->codigo().'.');
     }
 
     /**
@@ -84,7 +150,8 @@ class AlmacenController extends Controller
 
     /**
      * Elimina un hueco. Las herramientas que tuviera guardadas no se borran,
-     * simplemente quedan sin ubicación (hueco_id a null por la clave foránea).
+     * solo se quita esa relación (cascade en la tabla pivote herramienta_hueco);
+     * si estaban también en otro hueco, ahí se quedan.
      */
     public function destroy(Hueco $hueco)
     {

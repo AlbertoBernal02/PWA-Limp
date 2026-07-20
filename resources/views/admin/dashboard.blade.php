@@ -97,7 +97,7 @@
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $duracionMedia ?? '—' }}</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Duración media/tarea</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Duración media por tarea</p>
                     </div>
                 </div>
             </div>

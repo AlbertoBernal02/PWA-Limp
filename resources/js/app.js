@@ -8,6 +8,8 @@ import { initOfflineSync } from './offline-queue';
 import { initInstallPrompt } from './install-prompt';
 import { initPushNotifications } from './push-notifications';
 import { initEmpezarTarea } from './empezar-tarea';
+import { initAlmacenDrag } from './almacen-drag';
+import { initTrabajoSugerencias } from './trabajo-sugerencias';
 
 window.Alpine = Alpine;
 
@@ -24,3 +26,5 @@ initOfflineSync();
 initInstallPrompt();
 initPushNotifications();
 initEmpezarTarea();
+initAlmacenDrag();
+initTrabajoSugerencias();

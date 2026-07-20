@@ -45,6 +45,18 @@
                     </select>
                 </div>
 
+                @if ($trabajos->isNotEmpty())
+                    <div>
+                        <x-input-label for="trabajo_id" value="Trabajo" />
+                        <select id="trabajo_id" name="trabajo_id" class="field-input">
+                            <option value="">Todos</option>
+                            @foreach ($trabajos as $trabajo)
+                                <option value="{{ $trabajo->id }}" @selected(($filtros['trabajo_id'] ?? null) == $trabajo->id)>{{ $trabajo->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
                 <div class="flex gap-2">
                     <button type="submit" class="btn-secondary">Filtrar</button>
                     @if (array_filter($filtros))
@@ -76,6 +88,7 @@
                                 <th>Hora</th>
                                 <th>Cliente</th>
                                 <th>Operario</th>
+                                <th>Trabajo</th>
                                 <th>Estado</th>
                                 <th>Duración</th>
                                 <th>Evidencia</th>
@@ -90,6 +103,13 @@
                                     <td>{{ $tarea->hora_estimada ? \Illuminate\Support\Carbon::parse($tarea->hora_estimada)->format('H:i') : '—' }}</td>
                                     <td class="font-medium text-slate-800 dark:text-slate-100">{{ $tarea->cliente->nombre }}</td>
                                     <td>{{ $tarea->operario->name }}</td>
+                                    <td>
+                                        @if ($tarea->trabajo)
+                                            <span class="badge bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-400">{{ $tarea->trabajo->nombre }}</span>
+                                        @else
+                                            <span class="text-slate-300 dark:text-slate-600">—</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if ($tarea->estado === 'hecha')
                                             <span class="badge-done">Hecha</span>

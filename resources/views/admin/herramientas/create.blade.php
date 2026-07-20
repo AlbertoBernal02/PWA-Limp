@@ -22,17 +22,43 @@
                     </div>
 
                     <div>
-                        <x-input-label for="hueco_id" value="Ubicación en el almacén (opcional)" />
-                        <select id="hueco_id" name="hueco_id" class="field-input w-full">
-                            <option value="">Sin ubicación</option>
-                            @foreach ($huecos as $hueco)
-                                <option value="{{ $hueco->id }}" @selected(old('hueco_id') == $hueco->id)>{{ $hueco->codigo() }}</option>
-                            @endforeach
-                        </select>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            También puedes asignarla luego desde el <a href="{{ route('admin.almacen.index') }}" class="text-brand-700 dark:text-brand-400 hover:underline">mapa del almacén</a>.
+                        <x-input-label value="Ubicación en el almacén (opcional)" />
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-2">
+                            Puede estar repartida en varios huecos a la vez. También puedes asignarla luego desde el
+                            <a href="{{ route('admin.almacen.index') }}" class="text-brand-700 dark:text-brand-400 hover:underline">mapa del almacén</a>.
                         </p>
-                        <x-input-error :messages="$errors->get('hueco_id')" class="mt-2" />
+                        @if ($huecos->isEmpty())
+                            <p class="text-sm text-slate-400 dark:text-slate-500">Todavía no has creado ningún hueco.</p>
+                        @else
+                            <div class="flex flex-wrap gap-3">
+                                @foreach ($huecos as $hueco)
+                                    <label class="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+                                        <input type="checkbox" name="huecos[]" value="{{ $hueco->id }}" @checked(collect(old('huecos'))->contains($hueco->id))>
+                                        {{ $hueco->codigo() }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        @endif
+                        <x-input-error :messages="$errors->get('huecos')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Trabajos que usan esta herramienta (opcional)" />
+                        @if ($trabajos->isEmpty())
+                            <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                                Todavía no has creado ningún <a href="{{ route('admin.trabajos.create') }}" class="text-brand-700 dark:text-brand-400 hover:underline">tipo de trabajo</a>.
+                            </p>
+                        @else
+                            <div class="flex flex-wrap gap-3 mt-2">
+                                @foreach ($trabajos as $trabajo)
+                                    <label class="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+                                        <input type="checkbox" name="trabajos[]" value="{{ $trabajo->id }}" @checked(collect(old('trabajos'))->contains($trabajo->id))>
+                                        {{ $trabajo->nombre }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        @endif
+                        <x-input-error :messages="$errors->get('trabajos')" class="mt-2" />
                     </div>
 
                     <div class="flex items-center justify-end pt-2 gap-4">

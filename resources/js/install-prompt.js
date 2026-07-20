@@ -56,7 +56,7 @@ export function initInstallPrompt() {
         eventoDiferido = event;
 
         const banner = crearBanner(
-            'Instala Nítido en tu móvil para acceder más rápido, incluso sin cobertura.',
+            'Instala Sensilimp en tu móvil para acceder más rápido, incluso sin cobertura.',
             async () => {
                 eventoDiferido.prompt();
                 const resultado = await eventoDiferido.userChoice;
@@ -69,7 +69,7 @@ export function initInstallPrompt() {
     });
 
     if (esIos()) {
-        crearBanner('Para instalar Nítido: pulsa el botón Compartir y luego "Añadir a pantalla de inicio".', null);
+        crearBanner('Para instalar Sensilimp: pulsa el botón Compartir y luego "Añadir a pantalla de inicio".', null);
     }
 
     window.addEventListener('appinstalled', () => {

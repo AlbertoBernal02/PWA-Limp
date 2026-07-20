@@ -4,14 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable(['fila', 'columna'])]
 class Hueco extends Model
 {
-    public function herramientas(): HasMany
+    public function herramientas(): BelongsToMany
     {
-        return $this->hasMany(Herramienta::class);
+        return $this->belongsToMany(Herramienta::class);
+    }
+
+    /**
+     * Trabajos guardados en este hueco (ej. "todo lo de Diógenes va en A1"),
+     * independiente de qué herramientas sueltas tenga marcadas.
+     */
+    public function trabajos(): BelongsToMany
+    {
+        return $this->belongsToMany(Trabajo::class);
     }
 
     /**

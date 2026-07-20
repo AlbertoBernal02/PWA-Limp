@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\FichajeController as AdminFichajeController;
 use App\Http\Controllers\Admin\HerramientaController;
 use App\Http\Controllers\Admin\OperarioController;
 use App\Http\Controllers\Admin\TareaController as AdminTareaController;
+use App\Http\Controllers\Admin\TrabajoController;
 use App\Http\Controllers\Operario\FichajeController as OperarioFichajeController;
 use App\Http\Controllers\Operario\TareaController as OperarioTareaController;
 use App\Http\Controllers\ProfileController;
@@ -48,6 +49,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('fichajes/{operario}', [AdminFichajeController::class, 'store'])->name('fichajes.store');
     Route::delete('fichajes/registro/{fichaje}', [AdminFichajeController::class, 'destroy'])->name('fichajes.destroy');
     Route::resource('herramientas', HerramientaController::class)->except('show');
+    Route::resource('trabajos', TrabajoController::class)->except('show');
     Route::get('almacen', [AlmacenController::class, 'index'])->name('almacen.index');
     Route::post('almacen/filas', [AlmacenController::class, 'agregarFila'])->name('almacen.filas.store');
     Route::delete('almacen/filas/{fila}', [AlmacenController::class, 'eliminarFila'])->name('almacen.filas.destroy');
@@ -56,6 +58,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('almacen/huecos', [AlmacenController::class, 'crear'])->name('almacen.huecos.store');
     Route::post('almacen/huecos/{hueco}/asignar', [AlmacenController::class, 'asignar'])->name('almacen.huecos.asignar');
     Route::delete('almacen/huecos/{hueco}', [AlmacenController::class, 'destroy'])->name('almacen.huecos.destroy');
+    Route::post('almacen/huecos/{hueco}/herramientas', [AlmacenController::class, 'agregarHerramienta'])->name('almacen.huecos.herramientas.store');
+    Route::delete('almacen/huecos/{hueco}/herramientas/{herramienta}', [AlmacenController::class, 'quitarHerramienta'])->name('almacen.huecos.herramientas.destroy');
+    Route::post('almacen/huecos/{hueco}/trabajos', [AlmacenController::class, 'agregarTrabajo'])->name('almacen.huecos.trabajos.store');
+    Route::delete('almacen/huecos/{hueco}/trabajos/{trabajo}', [AlmacenController::class, 'quitarTrabajo'])->name('almacen.huecos.trabajos.destroy');
 });
 
 Route::middleware(['auth', 'role:operario'])->prefix('operario')->name('operario.')->group(function () {

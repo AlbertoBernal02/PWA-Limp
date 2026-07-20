@@ -164,7 +164,7 @@
 
                                             @if ($tarea->herramientas->isNotEmpty())
                                                 <div>
-                                                    <x-input-label value="Material gastado de lo que llevabas" />
+                                                    <x-input-label value="¿Cuánto has gastado de cada herramienta? (opcional)" />
                                                     <div class="space-y-2 mt-2">
                                                         @foreach ($tarea->herramientas as $herramienta)
                                                             <div class="flex items-center justify-between gap-3">

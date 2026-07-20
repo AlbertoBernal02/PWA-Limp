@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'cliente_id', 'operario_id', 'fecha', 'hora_estimada', 'orden_ruta', 'iniciada_at', 'descripcion', 'estado',
     'completada_at', 'foto_evidencia_path', 'nota', 'iniciada_lat', 'iniciada_lng', 'completada_lat', 'completada_lng',
+    'trabajo_id',
 ])]
 class Tarea extends Model
 {
@@ -37,6 +38,15 @@ class Tarea extends Model
     public function operario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'operario_id');
+    }
+
+    /**
+     * Tipo de trabajo de esta tarea (limpieza de oficinas, síndrome de Diógenes...),
+     * usado para sugerir qué herramientas suele llevar ese tipo de trabajo.
+     */
+    public function trabajo(): BelongsTo
+    {
+        return $this->belongsTo(Trabajo::class);
     }
 
     /**

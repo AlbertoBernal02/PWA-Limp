@@ -67,6 +67,21 @@
                         <x-input-error :messages="$errors->get('descripcion')" class="mt-2" />
                     </div>
 
+                    @if ($trabajos->isNotEmpty())
+                        <div>
+                            <x-input-label for="trabajo_id" value="Tipo de trabajo (opcional)" />
+                            <select id="trabajo_id" name="trabajo_id" class="field-input"
+                                data-trabajo-select='@json($trabajos->mapWithKeys(fn ($t) => [$t->id => $t->herramientas->pluck("id")]))'>
+                                <option value="">Sin especificar</option>
+                                @foreach ($trabajos as $trabajo)
+                                    <option value="{{ $trabajo->id }}" @selected(old('trabajo_id') == $trabajo->id)>{{ $trabajo->nombre }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Al elegirlo se marcan solas sus herramientas típicas de abajo (puedes ajustarlas).</p>
+                            <x-input-error :messages="$errors->get('trabajo_id')" class="mt-2" />
+                        </div>
+                    @endif
+
                     @if ($herramientas->isNotEmpty())
                         <div>
                             <x-input-label value="Herramientas a llevar (opcional)" />

@@ -4,12 +4,9 @@
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center gap-2">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
-                        <span class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-                            <x-application-logo class="w-5 h-5 fill-current text-white" />
-                        </span>
-                        <span class="hidden sm:block font-semibold text-slate-800 dark:text-slate-100">{{ config('app.name') }}</span>
+                <div class="shrink-0 flex items-center">
+                    <a href="{{ route('dashboard') }}" class="flex items-center">
+                        <img src="{{ asset('images/logocontexto.png') }}" alt="{{ config('app.name') }}" class="h-9 w-auto">
                     </a>
                 </div>
 

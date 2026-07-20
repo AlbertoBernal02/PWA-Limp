@@ -12,15 +12,8 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-4">
-            <div class="flex gap-4 border-b border-slate-200 dark:border-slate-700 text-sm font-medium">
-                <a href="{{ route('admin.herramientas.index') }}" class="px-1 py-2 text-brand-700 dark:text-brand-400 border-b-2 border-brand-600">
-                    Herramientas
-                </a>
-                <a href="{{ route('admin.almacen.index') }}" class="px-1 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
-                    Mapa del almacén
-                </a>
-            </div>
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-4">
+            <x-configuracion-tabs active="herramientas" />
 
             <p class="text-sm text-slate-500 dark:text-slate-400">
                 Gestiona el catálogo de herramientas/material que los operarios pueden necesitar llevar a
@@ -28,9 +21,30 @@
                 o se gaste/rompa alguna).
             </p>
 
+            @if ($trabajos->isNotEmpty())
+                <form method="GET" class="flex items-center gap-3">
+                    <label for="trabajo_id" class="text-sm text-slate-600 dark:text-slate-400">Filtrar por trabajo</label>
+                    <select id="trabajo_id" name="trabajo_id" class="field-input" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        @foreach ($trabajos as $trabajo)
+                            <option value="{{ $trabajo->id }}" @selected((string) $trabajoId === (string) $trabajo->id)>{{ $trabajo->nombre }}</option>
+                        @endforeach
+                    </select>
+                    @if ($trabajoId)
+                        <a href="{{ route('admin.herramientas.index') }}" class="text-sm text-slate-500 dark:text-slate-400 hover:underline">Quitar filtro</a>
+                    @endif
+                </form>
+            @endif
+
             @if ($herramientas->isEmpty())
                 <div class="empty-state">
-                    <p class="text-slate-500 dark:text-slate-400">Todavía no has dado de alta ninguna herramienta.</p>
+                    <p class="text-slate-500 dark:text-slate-400">
+                        @if ($trabajoId)
+                            Ninguna herramienta marcada con ese trabajo todavía.
+                        @else
+                            Todavía no has dado de alta ninguna herramienta.
+                        @endif
+                    </p>
                     <a href="{{ route('admin.herramientas.create') }}" class="btn-primary">Crear la primera</a>
                 </div>
             @else
@@ -41,6 +55,7 @@
                                 <th>Nombre</th>
                                 <th>Cantidad en almacén</th>
                                 <th>Ubicación</th>
+                                <th>Trabajos</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -56,11 +71,18 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if ($herramienta->hueco)
-                                            <span class="badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{{ $herramienta->hueco->codigo() }}</span>
-                                        @else
+                                        @forelse ($herramienta->huecos as $hueco)
+                                            <span class="badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{{ $hueco->codigo() }}</span>
+                                        @empty
                                             <span class="text-slate-400 dark:text-slate-500">—</span>
-                                        @endif
+                                        @endforelse
+                                    </td>
+                                    <td>
+                                        @forelse ($herramienta->trabajos as $trabajo)
+                                            <span class="badge bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-400">{{ $trabajo->nombre }}</span>
+                                        @empty
+                                            <span class="text-slate-400 dark:text-slate-500">—</span>
+                                        @endforelse
                                     </td>
                                     <td class="text-right space-x-3 row-actions">
                                         <a href="{{ route('admin.herramientas.edit', $herramienta) }}" class="text-brand-700 hover:underline">Editar</a>
