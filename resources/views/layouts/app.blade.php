@@ -49,10 +49,13 @@
             <x-flash-messages />
 
             <!-- Page Content -->
-            <main>
+            <main class="pb-20 sm:pb-0">
                 {{ $slot }}
             </main>
         </div>
+
+        <x-mobile-tab-bar />
+        <x-chat-flotante />
 
         <script>
             if ('serviceWorker' in navigator) {

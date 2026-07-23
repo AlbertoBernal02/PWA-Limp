@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+<nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -15,6 +15,9 @@
                     @if (Auth::user()->esAdmin())
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             Panel
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.agenda.index')" :active="request()->routeIs('admin.agenda.*')">
+                            Agenda
                         </x-nav-link>
                         <x-nav-link :href="route('admin.tareas.index')" :active="request()->routeIs('admin.tareas.*')">
                             Tareas
@@ -39,6 +42,9 @@
                             Fichar
                         </x-nav-link>
                     @endif
+                    <x-nav-link :href="route('documentacion.index')" :active="request()->routeIs('documentacion.*')">
+                        Documentación
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -79,7 +85,7 @@
                         </x-dropdown-link>
 
                         <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" data-logout-form>
                             @csrf
 
                             <x-dropdown-link :href="route('logout')"
@@ -92,7 +98,7 @@
                 </x-dropdown>
             </div>
 
-            <!-- Hamburger -->
+            <!-- Iconos en móvil (la navegación en sí va en la barra inferior, x-mobile-tab-bar) -->
             <div class="-me-2 flex items-center gap-3 sm:hidden">
                 <button type="button" data-push-toggle class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition duration-150 ease-in-out" aria-label="Avisos de tareas del día">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -100,73 +106,6 @@
                     </svg>
                 </button>
                 <x-theme-toggle />
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-slate-500 hover:text-gray-500 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-700 focus:text-gray-500 dark:focus:text-slate-300 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            @if (Auth::user()->esAdmin())
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    Panel
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.tareas.index')" :active="request()->routeIs('admin.tareas.*')">
-                    Tareas
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
-                    Clientes
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.operarios.index')" :active="request()->routeIs('admin.operarios.*')">
-                    Operarios
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.fichajes.index')" :active="request()->routeIs('admin.fichajes.*')">
-                    Fichajes
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.herramientas.index')" :active="request()->routeIs('admin.herramientas.*')">
-                    Configuración
-                </x-responsive-nav-link>
-            @else
-                <x-responsive-nav-link :href="route('operario.tareas.index')" :active="request()->routeIs('operario.tareas.index')">
-                    Mis tareas de hoy
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('operario.tareas.historial')" :active="request()->routeIs('operario.tareas.historial')">
-                    Historial
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('operario.fichajes.index')" :active="request()->routeIs('operario.fichajes.index')">
-                    Fichar
-                </x-responsive-nav-link>
-            @endif
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-slate-700">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-slate-100">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500 dark:text-slate-400">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    Perfil
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        Cerrar sesión
-                    </x-responsive-nav-link>
-                </form>
             </div>
         </div>
     </div>

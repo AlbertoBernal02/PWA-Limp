@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Fichaje;
 use App\Models\User;
+use App\Support\ExportaTabla;
 use App\Support\Jornada;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class FichajeController extends Controller
 {
+    use ExportaTabla;
+
     /**
      * Resumen de todos los operarios: estado de hoy y total de horas de la semana.
      */
@@ -45,6 +48,40 @@ class FichajeController extends Controller
             });
 
         return view('admin.fichajes.index', compact('resumen'));
+    }
+
+    /**
+     * Exporta el resumen semanal de fichajes de todos los operarios a CSV o PDF.
+     */
+    public function exportar(Request $request)
+    {
+        $data = $request->validate(['formato' => ['required', Rule::in(['pdf', 'csv'])]]);
+
+        $inicioSemana = now()->startOfWeek();
+        $finSemana = now()->endOfWeek();
+
+        $filas = User::where('role', 'operario')
+            ->orderBy('name')
+            ->get()
+            ->map(function (User $operario) use ($inicioSemana, $finSemana) {
+                $fichajesHoy = $operario->fichajes()->whereDate('fichado_en', now()->toDateString())->orderBy('fichado_en')->get();
+                $fichajesSemana = $operario->fichajes()->whereBetween('fichado_en', [$inicioSemana, $finSemana])->orderBy('fichado_en')->get();
+
+                return [
+                    $operario->name,
+                    $fichajesHoy->last() ? Jornada::etiqueta($fichajesHoy->last()->tipo) : 'Sin fichar hoy',
+                    Jornada::formatoHoras(Jornada::segundosTrabajadosHasta($fichajesHoy)),
+                    Jornada::formatoHoras(Jornada::segundosTrabajadosHasta($fichajesSemana)),
+                ];
+            })->all();
+
+        return $this->exportarTabla(
+            $data['formato'],
+            'Fichajes',
+            ['Operario', 'Estado hoy', 'Horas hoy', 'Horas esta semana'],
+            $filas,
+            'fichajes'
+        );
     }
 
     /**

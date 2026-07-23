@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Herramienta;
 use App\Models\Trabajo;
+use App\Support\ExportaTabla;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class TrabajoController extends Controller
 {
+    use ExportaTabla;
+
     /**
      * Listado de tipos de trabajo (limpieza de oficinas, síndrome de Diógenes...).
      */
@@ -18,6 +21,20 @@ class TrabajoController extends Controller
         $trabajos = Trabajo::withCount('herramientas', 'tareas')->orderBy('nombre')->get();
 
         return view('admin.trabajos.index', compact('trabajos'));
+    }
+
+    /**
+     * Exporta el listado de tipos de trabajo a CSV o PDF.
+     */
+    public function exportar(Request $request)
+    {
+        $data = $request->validate(['formato' => ['required', Rule::in(['pdf', 'csv'])]]);
+
+        $trabajos = Trabajo::withCount('herramientas', 'tareas')->orderBy('nombre')->get();
+
+        $filas = $trabajos->map(fn (Trabajo $t) => [$t->nombre, $t->herramientas_count, $t->tareas_count])->all();
+
+        return $this->exportarTabla($data['formato'], 'Trabajos', ['Nombre', 'Nº herramientas', 'Nº tareas'], $filas, 'trabajos');
     }
 
     public function create()

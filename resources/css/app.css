@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Evita el parpadeo de elementos con x-show mientras Alpine todavía no ha
+   arrancado (por ejemplo, el chat flotante justo tras una navegación Turbo). */
+[x-cloak] {
+    display: none !important;
+}
+
 @layer components {
     .card {
         @apply bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10 rounded-xl;
@@ -23,6 +29,10 @@
         @apply btn bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 ring-1 ring-inset ring-red-200 dark:ring-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10 focus:ring-red-500;
     }
 
+    .btn-accent {
+        @apply btn bg-white dark:bg-slate-800 text-accent-700 dark:text-accent-400 ring-1 ring-inset ring-accent-200 dark:ring-accent-500/30 hover:bg-accent-50 dark:hover:bg-accent-500/10 focus:ring-accent-500;
+    }
+
     .badge {
         @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
     }
@@ -37,6 +47,45 @@
 
     .table-shell {
         @apply card overflow-x-auto;
+    }
+
+    /* Scrollbar horizontal más fina y discreta, en vez de la barra ancha y gris
+       por defecto del navegador. .table-shell la lleva ya incluida; .scrollbar-fina
+       es la misma regla suelta para otros contenedores con scroll horizontal
+       (ej. el mapa de almacén). */
+    .table-shell,
+    .scrollbar-fina {
+        scrollbar-width: thin;
+        scrollbar-color: theme('colors.slate.300') transparent;
+    }
+
+    .dark .table-shell,
+    .dark .scrollbar-fina {
+        scrollbar-color: theme('colors.slate.600') transparent;
+    }
+
+    .table-shell::-webkit-scrollbar,
+    .scrollbar-fina::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+
+    .table-shell::-webkit-scrollbar-track,
+    .scrollbar-fina::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .table-shell::-webkit-scrollbar-thumb,
+    .scrollbar-fina::-webkit-scrollbar-thumb {
+        @apply bg-slate-300 dark:bg-slate-600;
+        border-radius: 9999px;
+        background-clip: padding-box;
+    }
+
+    .table-shell::-webkit-scrollbar-thumb:hover,
+    .scrollbar-fina::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-400 dark:bg-slate-500;
+        background-clip: padding-box;
     }
 
     .table-shell table {
@@ -87,7 +136,8 @@
     }
 
     .install-banner {
-        @apply fixed inset-x-4 bottom-4 z-50 flex flex-wrap items-center justify-between gap-3 rounded-xl shadow-lg ring-1 ring-slate-900/10 dark:ring-white/10 bg-white dark:bg-slate-800 px-4 py-3 sm:max-w-md sm:left-auto sm:right-4;
+        /* bottom-20 en móvil para no tapar la barra de navegación inferior (solo visible en sm:hidden) */
+        @apply fixed inset-x-4 bottom-20 z-50 flex flex-wrap items-center justify-between gap-3 rounded-xl shadow-lg ring-1 ring-slate-900/10 dark:ring-white/10 bg-white dark:bg-slate-800 px-4 py-3 sm:bottom-4 sm:max-w-md sm:left-auto sm:right-4;
     }
 
     .install-banner-text {
@@ -120,5 +170,35 @@
 
     .empty-state {
         @apply card flex flex-col items-center justify-center text-center gap-3 py-16 px-6;
+    }
+
+    /* Estilos manuales para el HTML generado a partir de Markdown en la sección
+       de Documentación (no hay plugin de tipografía instalado en el proyecto). */
+    .prose-doc h1 {
+        @apply text-xl font-semibold text-slate-800 dark:text-slate-100 mb-3;
+    }
+
+    .prose-doc h2 {
+        @apply text-lg font-semibold text-slate-800 dark:text-slate-100 mt-6 mb-2;
+    }
+
+    .prose-doc p {
+        @apply text-sm text-slate-700 dark:text-slate-300 mb-3 leading-relaxed;
+    }
+
+    .prose-doc ul, .prose-doc ol {
+        @apply text-sm text-slate-700 dark:text-slate-300 mb-3 pl-5 space-y-1;
+    }
+
+    .prose-doc ul {
+        @apply list-disc;
+    }
+
+    .prose-doc ol {
+        @apply list-decimal;
+    }
+
+    .prose-doc strong {
+        @apply font-semibold text-slate-800 dark:text-slate-100;
     }
 }

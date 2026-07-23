@@ -8,6 +8,9 @@
             <div class="card p-6">
                 <form method="POST" action="{{ route('admin.tareas.store') }}" class="space-y-4">
                     @csrf
+                    @if ($volverAMes ?? null)
+                        <input type="hidden" name="volver_a_mes" value="{{ $volverAMes }}">
+                    @endif
 
                     <div>
                         <x-input-label for="cliente_id" value="Cliente" />
@@ -43,7 +46,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="fecha" value="Fecha" />
-                            <x-text-input id="fecha" name="fecha" type="date" class="w-full" :value="old('fecha', now()->toDateString())" required />
+                            <x-text-input id="fecha" name="fecha" type="date" class="w-full" :value="old('fecha', $fecha ?? now()->toDateString())" required />
                             <x-input-error :messages="$errors->get('fecha')" class="mt-2" />
                         </div>
 
@@ -105,7 +108,7 @@
                     @endif
 
                     <div class="flex items-center justify-end pt-2 gap-4">
-                        <a href="{{ route('admin.tareas.index') }}" class="text-sm text-slate-600 dark:text-slate-400 hover:underline">Cancelar</a>
+                        <a href="{{ ($volverAMes ?? null) ? route('admin.agenda.index', ['mes' => $volverAMes]) : route('admin.tareas.index') }}" class="text-sm text-slate-600 dark:text-slate-400 hover:underline">Cancelar</a>
                         <x-primary-button>Crear tarea</x-primary-button>
                     </div>
                 </form>

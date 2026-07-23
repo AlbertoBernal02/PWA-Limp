@@ -1,6 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Fichajes</h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Fichajes</h2>
+            <x-exportar-tabla :ruta="route('admin.fichajes.exportar')" />
+        </div>
     </x-slot>
 
     <div class="py-8">

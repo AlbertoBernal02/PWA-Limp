@@ -107,7 +107,7 @@
                             <p class="text-slate-500 dark:text-slate-400">Todavía no has creado ningún hueco. Añade una fila o columna para empezar.</p>
                         </div>
                     @else
-                        <div class="rounded-xl border-2 border-amber-200/70 dark:border-slate-700 bg-gradient-to-b from-amber-50/60 to-amber-100/30 dark:from-slate-800/60 dark:to-slate-800/20 p-4 overflow-x-auto">
+                        <div class="rounded-xl border-2 border-amber-200/70 dark:border-slate-700 bg-gradient-to-b from-amber-50/60 to-amber-100/30 dark:from-slate-800/60 dark:to-slate-800/20 p-4 overflow-x-auto scrollbar-fina">
                             <div class="inline-block min-w-full">
                                 {{-- Cabecera de columnas: el número de "hueco" dentro de cada balda --}}
                                 <div class="flex gap-3 pl-12 mb-2">

@@ -6,10 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Herramienta;
 use App\Models\Hueco;
 use App\Models\Trabajo;
+use App\Support\ExportaTabla;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class HerramientaController extends Controller
 {
+    use ExportaTabla;
+
     /**
      * Listado de herramientas y su cantidad en almacén. Se puede filtrar por
      * trabajo para ver de un vistazo qué hay para un tipo de servicio.
@@ -26,6 +30,35 @@ class HerramientaController extends Controller
         $trabajos = Trabajo::orderBy('nombre')->get();
 
         return view('admin.herramientas.index', compact('herramientas', 'trabajos', 'trabajoId'));
+    }
+
+    /**
+     * Exporta el listado de herramientas (respetando el filtro de trabajo actual) a CSV o PDF.
+     */
+    public function exportar(Request $request)
+    {
+        $data = $request->validate(['formato' => ['required', Rule::in(['pdf', 'csv'])]]);
+        $trabajoId = $request->query('trabajo_id');
+
+        $herramientas = Herramienta::with('huecos', 'trabajos')
+            ->when($trabajoId, fn ($query) => $query->whereRelation('trabajos', 'trabajos.id', $trabajoId))
+            ->orderBy('nombre')
+            ->get();
+
+        $filas = $herramientas->map(fn (Herramienta $h) => [
+            $h->nombre,
+            $h->cantidad,
+            $h->huecos->map->codigo()->implode(', '),
+            $h->trabajos->pluck('nombre')->implode(', '),
+        ])->all();
+
+        return $this->exportarTabla(
+            $data['formato'],
+            'Herramientas',
+            ['Nombre', 'Cantidad', 'Ubicación', 'Trabajos'],
+            $filas,
+            'herramientas'
+        );
     }
 
     public function create()

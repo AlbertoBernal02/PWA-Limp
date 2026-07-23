@@ -8,10 +8,15 @@ use App\Models\Herramienta;
 use App\Models\Tarea;
 use App\Models\Trabajo;
 use App\Models\User;
+use App\Support\ExportaTabla;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class TareaController extends Controller
 {
+    use ExportaTabla;
+
     /**
      * Display a listing of the resource.
      */
@@ -44,15 +49,58 @@ class TareaController extends Controller
     }
 
     /**
+     * Exporta el listado de tareas (respetando los filtros actuales) a CSV o PDF.
+     */
+    public function exportar(Request $request)
+    {
+        $data = $request->validate(['formato' => ['required', Rule::in(['pdf', 'csv'])]]);
+        $filtros = $request->only(['q', 'fecha', 'operario_id', 'estado', 'trabajo_id']);
+
+        $tareas = Tarea::with(['cliente', 'operario', 'trabajo'])
+            ->when($filtros['q'] ?? null, fn ($query, $q) => $query->where(function ($query) use ($q) {
+                $query->whereHas('cliente', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
+                    ->orWhereHas('operario', fn ($query) => $query->where('name', 'like', "%{$q}%"))
+                    ->orWhere('descripcion', 'like', "%{$q}%");
+            }))
+            ->when($filtros['fecha'] ?? null, fn ($query, $fecha) => $query->whereDate('fecha', $fecha))
+            ->when($filtros['operario_id'] ?? null, fn ($query, $id) => $query->where('operario_id', $id))
+            ->when($filtros['estado'] ?? null, fn ($query, $estado) => $query->where('estado', $estado))
+            ->when($filtros['trabajo_id'] ?? null, fn ($query, $id) => $query->where('trabajo_id', $id))
+            ->orderByDesc('fecha')
+            ->orderBy('hora_estimada')
+            ->get();
+
+        $filas = $tareas->map(fn (Tarea $t) => [
+            $t->fecha->format('d/m/Y'),
+            $t->hora_estimada ? Carbon::parse($t->hora_estimada)->format('H:i') : '',
+            $t->cliente->nombre,
+            $t->operario->name,
+            $t->estado === 'hecha' ? 'Hecha' : 'Pendiente',
+            $t->trabajo->nombre ?? '',
+            $t->descripcion ?: '',
+        ])->all();
+
+        return $this->exportarTabla(
+            $data['formato'],
+            'Tareas',
+            ['Fecha', 'Hora', 'Cliente', 'Operario', 'Estado', 'Trabajo', 'Descripción'],
+            $filas,
+            'tareas'
+        );
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         [$clientes, $operarios] = $this->opciones();
         $herramientas = Herramienta::orderBy('nombre')->get();
         $trabajos = Trabajo::with('herramientas')->orderBy('nombre')->get();
+        $fecha = $request->query('fecha');
+        $volverAMes = $request->query('volver_a_mes');
 
-        return view('admin.tareas.create', compact('clientes', 'operarios', 'herramientas', 'trabajos'));
+        return view('admin.tareas.create', compact('clientes', 'operarios', 'herramientas', 'trabajos', 'fecha', 'volverAMes'));
     }
 
     /**
@@ -125,7 +173,10 @@ class TareaController extends Controller
             $mensaje .= " {$omitidas} se ".($omitidas === 1 ? 'omitió' : 'omitieron').' por ausencia/vacaciones del operario en esas fechas.';
         }
 
-        return redirect()->route('admin.tareas.index')->with('status', $mensaje);
+        $volverAMes = $request->input('volver_a_mes');
+        $destino = $volverAMes ? route('admin.agenda.index', ['mes' => $volverAMes]) : route('admin.tareas.index');
+
+        return redirect($destino)->with('status', $mensaje);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ExportaTabla;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class OperarioController extends Controller
 {
+    use ExportaTabla;
+
     /**
      * Display a listing of the resource.
      */
@@ -29,6 +32,28 @@ class OperarioController extends Controller
             ->withQueryString();
 
         return view('admin.operarios.index', compact('operarios', 'busqueda'));
+    }
+
+    /**
+     * Exporta el listado de operarios (respetando la búsqueda actual) a CSV o PDF.
+     */
+    public function exportar(Request $request)
+    {
+        $data = $request->validate(['formato' => ['required', Rule::in(['pdf', 'csv'])]]);
+        $busqueda = $request->query('q');
+
+        $operarios = User::where('role', 'operario')
+            ->when($busqueda, fn ($query, $q) => $query->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('telefono', 'like', "%{$q}%");
+            }))
+            ->orderBy('name')
+            ->get();
+
+        $filas = $operarios->map(fn (User $o) => [$o->name, $o->email, $o->telefono ?: '', $o->activo ? 'Sí' : 'No'])->all();
+
+        return $this->exportarTabla($data['formato'], 'Operarios', ['Nombre', 'Email', 'Teléfono', 'Activo'], $filas, 'operarios');
     }
 
     /**

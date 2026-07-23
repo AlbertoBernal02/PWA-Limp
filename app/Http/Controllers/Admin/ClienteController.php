@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Tarea;
+use App\Support\ExportaTabla;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class ClienteController extends Controller
 {
+    use ExportaTabla;
+
     /**
      * Display a listing of the resource.
      */
@@ -31,6 +34,27 @@ class ClienteController extends Controller
             ->withQueryString();
 
         return view('admin.clientes.index', compact('clientes', 'busqueda'));
+    }
+
+    /**
+     * Exporta el listado de clientes (respetando la búsqueda actual) a CSV o PDF.
+     */
+    public function exportar(Request $request)
+    {
+        $data = $request->validate(['formato' => ['required', Rule::in(['pdf', 'csv'])]]);
+        $busqueda = $request->query('q');
+
+        $clientes = Cliente::when($busqueda, fn ($query, $q) => $query->where(function ($query) use ($q) {
+                $query->where('nombre', 'like', "%{$q}%")
+                    ->orWhere('direccion', 'like', "%{$q}%")
+                    ->orWhere('telefono', 'like', "%{$q}%");
+            }))
+            ->orderBy('nombre')
+            ->get();
+
+        $filas = $clientes->map(fn (Cliente $c) => [$c->nombre, $c->direccion, $c->telefono ?: ''])->all();
+
+        return $this->exportarTabla($data['formato'], 'Clientes', ['Nombre', 'Dirección', 'Teléfono'], $filas, 'clientes');
     }
 
     /**
