@@ -1,4 +1,4 @@
-# Sensilimp — Gestión de tareas para empresa de limpieza
+# PWA Limp — Gestión de tareas para empresa de limpieza
 
 Aplicación web (PWA) para que una empresa de limpieza gestione clientes, operarios y
 las tareas diarias de limpieza. Cada operario consulta desde el móvil, sin pasar por
